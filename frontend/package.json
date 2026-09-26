@@ -2,6 +2,9 @@
   "name": "algo-visualizer-frontend",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev -p 4000",
     "build": "next build",
