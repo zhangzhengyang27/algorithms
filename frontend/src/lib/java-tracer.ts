@@ -819,6 +819,17 @@ class JavaInterpreter {
       }
       case 'attr': {
         const obj = this.eval(node.value, env);
+        // 静态字段访问（Integer.MAX_VALUE / Double.MIN_VALUE 等）不是方法调用：
+        // staticCall 里本就有 MAX_VALUE/MIN_VALUE 分支，但过去只有 call 节点才会进它，
+        // 于是字段访问会走成 env.get('Integer') === undefined → 常量恒为 undefined，
+        // 使比较运算静默得到错误结果（如 LC 121 用 Integer.MAX_VALUE 时 maxProfit 恒为 0）。
+        if (
+          obj === undefined &&
+          node.value?.t === 'name' &&
+          STATIC_CLASSES.has(node.value.id)
+        ) {
+          return this.staticCall(node.value.id, node.attr, [], env);
+        }
         return this.getAttr(obj, node.attr);
       }
       case 'call': return this.evalCall(node, env);

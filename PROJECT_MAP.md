@@ -229,7 +229,7 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 11 | `backend/devDependencies` 含 `eslint-config-next@16`（Next 专用预设），且后端无 `lint` 脚本 | ✅ 已移除 `eslint-config-next` 与同样无用的 `@eslint/eslintrc`（后端无任何 eslint 配置文件，二者零引用；前端 `eslint.config.mjs` 确实 import 前者，保留）。锁文件已重建并通过 `--frozen-lockfile` |
 | 12 | 本地 node v24 与 Dockerfile `node:22-slim` 不一致；`package.json` 无 `engines` 约束 | 🔶 两端已补 `"engines": { "node": ">=22" }`（取 `>=22` 是因为 v24 实测全绿，写死 22 反而会把本地开发判为非法）；未开 `engine-strict`，故仍为提示性约束 |
 | 13 | `next.config.ts` rewrite 兜底 host 为 compose 服务名 `http://backend:40001`，新克隆无 `.env.local` 则 API 全挂 | ✅ 兜底改为 `http://localhost:40001`；生产由 compose 显式注入服务名，行为不变。`.env.example` 也补了该项说明 |
-| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，此前前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | 🔶 部分改善：新增 `data-structures/index.test.ts` 92 例 + `lib/visualizer-registry.test.ts` 13 例（前端 41→146），均经变异/漂移注入验证判别力。**126 个面板与 3050 行 tracer 的内容正确性仍为零测试**，这是当前最大的质量缺口 |
+| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，此前前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | 🔶 大幅改善：前端 41 → **165 例**（数据结构 92 + 注册表绊线 13 + 三 tracer 正确性 19，另含原有 41）。**剩余最大缺口是 126 个可视化面板**——见第 26 项的结构原因 |
 | 15 | `frontend/` 此前无 `test` 脚本（有 `jest.config.cjs` 却无入口） | ✅ 已补 `"test": "jest"` |
 | 16 | `.env.example` 与 `docker-compose.yml` 注释里写了内网真实地址与库用户名 | ✅ 已改为占位符；真实地址仅存在于不入库的 `backend/.env` |
 | 17 | README 声明 MIT 但无 `LICENSE` 文件 | ✅ 已补（版权行取自 git identity，若不符请改） |
@@ -239,6 +239,9 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 21 | `MapSum.sum(prefix)` 是「所有以该前缀开头的整词权重之和」，因此 `sum('ap')` 会把 `apt` 也算进去 | ✅ 非缺陷，但极易误读，已在测试中用注释钉住 |
 | 22 | **CI 首跑在 `npx prisma validate` 处失败**（frontend job 全绿）：`prisma validate` 虽从不连库，却要求 `DATABASE_URL` **已定义**，未定义报 `P1012`。本地永远测不出来，因为 `backend/.env` 就在磁盘上，而它被 gitignore、CI 上不存在 | ✅ 已在 `ci.yml` 的 backend job 给 job 级占位 `DATABASE_URL`。复现与验证方式：把 schema 单独复制到无 `.env` 的目录跑 validate（必现 P1012）→ 再临时移走 `backend/.env` 跑完 validate/generate/build/test 四步（全 rc=0）后原样还原 |
 | 23 | `visualizerRegistry` 用**字符串**按名字取命名导出（`mod[name]`），所以「面板里组件改名」「注册表写错文件名」「`tutorialToVisualizer` 指向不存在的 slug」这三类都**过不了运行时但过得了 `tsc`** —— 因为 `named(loader, "SortingPanel")` 的第二个参数是裸字符串，没有字面量约束 | ✅ 已加 `lib/visualizer-registry.test.ts`（13 例）作绊线。经漂移注入验证生效：改组件名 / 删面板文件 ×2 / 映射写错 slug ×3 种变体，全部被捕获。含「解析器自检」下限断言，防止正则失效导致空集合全过的假绿 |
+| 24 | **三个 tracer 在 Jest 下连模块都加载不了**：`python-tracer`/`java-tracer` 都 `import { Env, deepCopy, stringify, … } from './solution-tracer'`，而 `solution-tracer` 引入 **ESM-only** 的 `ts-blank-space`（其 `package.json` 为 `"type": "module"`，无 CJS 产物）。Jest 默认不转换 node_modules，于是 3050 行「在线运行/判题」核心逻辑**结构性不可测**——这才是它零测试的真正原因，不是忘了写 | ✅ `jest.config.cjs` 加 `transformIgnorePatterns: ['node_modules/.pnpm/(?!ts-blank-space@)']` 与 `.js` 的 ts-jest 转换，**只放开这一个包**（pnpm 真实路径有两层 node_modules，按 `.pnpm/` 后的包名判定，否则要么不生效要么整个 node_modules 被编译）。既有 146 例无回归 |
+| 25 | **`java-tracer` 里 `Integer.MAX_VALUE` / `MIN_VALUE` 恒为 `undefined`**：`staticCall()` 第 1069 行本来就有 `case 'MAX_VALUE'`，但它**只在 call 节点被调用**（第 894 行），而字段访问的求值路径是 `attr → env.get('Integer') → undefined → getAttr(undefined,…)`，永远走不到那个分支（即该分支原为死代码）。后果是**静默算错**而非报错：LC 121 最经典的 Java 写法（`int min = Integer.MAX_VALUE`）在这套执行器里恒返回 `0`，正确答案是 `5` | ✅ 已在 `attr` 分支加静态类字段兜底（局部变量优先，仅当 env 取不到且基名属 `STATIC_CLASSES` 才走静态解析）。仓库内 `.md`/题库数据里 `Integer.MAX_VALUE` 出现 48 处、`MIN_VALUE` 6 处，暴露面广。回归测试见 `tracers.test.ts`：撤销修复后该 2 例会失败（已实测） |
+| 26 | **126 个可视化面板在结构上无法单测**：§4 说每个面板的 `buildSteps(inputs): VizStep[]` 是纯函数——这本该是最理想的可测单元。实测形状高度统一：**118 / 126 是同一个顶层 `function buildSteps`**（另 3 个是 `buildXxxSteps` 之类，共 121 个有该形状），但 **0 / 126 导出它**，外部只能拿到 React 组件，于是「帧算得对不对」只能靠渲染或人工眼看 | ⚠️ 未修，是剩余最大质量缺口。好消息是成本极低：对那 118 个同名函数各加一个 `export` 关键字（不改任何行为）即可批量断言「末帧状态 == 该算法的真实结果」，思路与本次 tracer 测试完全一致；剩 8 个需单独看。属跨文件机械改动，需你确认后再做 |
 
 ---
 
