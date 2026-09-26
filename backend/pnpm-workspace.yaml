@@ -1,6 +1,6 @@
-# pnpm 11 配置（backend）
+# pnpm 配置（backend）
 # - verifyDepsBeforeRun: false  关闭运行时 deps 校验，否则 Docker 里 pnpm run 会因非 TTY 直接报错退出
-# - dangerouslyAllowAllBuilds: true  允许全部依赖的安装脚本（prisma/bcrypt 等需原生编译）
-#   注：自托管受信应用，风险可控；若要更严格可改回显式 allowBuilds 白名单。
+# - 依赖构建脚本白名单在 package.json 的 pnpm.onlyBuiltDependencies 里维护。
+#   不要在此再加 dangerouslyAllowAllBuilds：pnpm 10 会与 onlyBuiltDependencies 判定为
+#   「同时设置 neverBuiltDependencies 与 onlyBuiltDependencies」，导致 pnpm install 直接失败。
 verifyDepsBeforeRun: false
-dangerouslyAllowAllBuilds: true
