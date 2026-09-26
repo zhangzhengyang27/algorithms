@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String?
+  avatarUrl    String?   @map("avatar_url")
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  progress     Progress[]
+  notes        Note[]
+  comments     Comment[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  icon        String?
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  problems    Problem[]
+
+  @@map("categories")
+}
+
+model Problem {
+  id           String     @id @default(uuid())
+  categoryId   String     @map("category_id")
+  title        String
+  slug         String     @unique
+  difficulty   Difficulty @default(MEDIUM)
+  descriptionMd String    @map("description_md")
+  examples     Json
+  solutions    Json
+  hints        Json?
+  timeLimit    Int        @default(2000) @map("time_limit")
+  memoryLimit  Int        @default(256) @map("memory_limit")
+  testCases    Json?      @map("test_cases")
+  defaultCode  String?   @map("default_code")
+  tags         String[]   @default([])
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  category     Category   @relation(fields: [categoryId], references: [id])
+  progress     Progress[]
+  notes        Note[]
+  comments     Comment[]
+
+  @@index([categoryId])
+  @@map("problems")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Progress {
+  id          String         @id @default(uuid())
+  userId      String         @map("user_id")
+  problemId   String         @map("problem_id")
+  status      ProgressStatus @default(NOT_STARTED)
+  code        String?
+  notes       String?
+  completedAt DateTime?      @map("completed_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  user        User           @relation(fields: [userId], references: [id])
+  problem     Problem        @relation(fields: [problemId], references: [id])
+
+  @@unique([userId, problemId])
+  @@index([problemId])
+  @@map("progress")
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  ATTEMPTING
+  COMPLETED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  problemId String?  @map("problem_id")
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id])
+  problem   Problem? @relation(fields: [problemId], references: [id])
+
+  @@index([userId])
+  @@map("notes")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  problemId String   @map("problem_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id])
+  problem   Problem  @relation(fields: [problemId], references: [id])
+
+  @@index([problemId, createdAt])
+  @@map("comments")
+}

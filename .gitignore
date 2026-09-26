@@ -1,0 +1,58 @@
+# Dependencies
+**/node_modules/
+
+# Build artifacts
+**/dist/
+**/.next/
+**/out/
+**/build/
+
+# Environment files (contain secrets)
+.env
+.env.*
+!**/.env.example
+
+# Logs
+**/*.log
+**/logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Next.js auto-generated
+**/next-env.d.ts
+
+# Prisma
+**/prisma/.prisma/
+**/prisma/migrations/dev/
+
+# Coverage
+**/coverage/
+
+# Test
+**/.pytest_cache/
+
+# Brainstorming visual companion artifacts
+.superpowers/
+
+# WorkBuddy 项目数据（非源码，不入库）
+.workbuddy/
+
+# 数据库备份导出（含真实数据，勿入库）
+backups/

@@ -1,0 +1,40 @@
+[
+ {
+  "slug": "cr-wordsequence",
+  "title": "单词覆盖链（Word Sequence）",
+  "difficulty": "MEDIUM",
+  "categorySlug": "dynamic-programming",
+  "tags": [
+   "dp",
+   "lis-variant",
+   "string"
+  ],
+  "timeLimit": 2000,
+  "descriptionMd": "# 单词覆盖链（Word Sequence）\n\n> 来源：《算法进阶》配套代码库（coderepo）· Chapter 4 Dynamic Programming Basics（动态规划入门）。难度：MEDIUM。标签：dp, lis-variant, string。\n\n## 题目描述\n给定若干由小写字母组成的单词。定义「$x$ 覆盖 $y$」：单词 $x$ 中每种字母的出现次数都不少于 $y$。\n\n可以按**长度递增**的顺序选出若干单词组成一条链：链中后一个单词覆盖前一个单词（即长度更长的词包含前一个词的全部字符）。求**最长链包含的单词数**，并输出这条链上的单词（按长度递增，即链的顺序）。\n\n## 输入格式\n多行，每行一个单词（读到文件末尾 EOF）。单词由小写字母组成，可能有空行（忽略）。\n\n## 输出格式\n第一行一个整数：最长链的单词数；\n接下来若干行：链上的单词，每行一个，按链的顺序（长度递增）输出。若有多条最长链，输出任意一条即可（本判题按字符覆盖 DP 的确定顺序取一条）。\n\n## 数据范围\n单词数量 $\\le 10^3$，单词长度 $\\le 10^3$，字母只含小写。\n\n## 思路提示\n- 按长度升序排序，`f[i]` = 以第 $i$ 个词结尾的最长链长：`f[i] = 1 + max(f[j])`（$j<i$ 且 $i$ 覆盖 $j$）。\n- 用 26 维计数数组快速判断覆盖；记录前驱 `pre[i]` 回溯输出整条链。\n",
+  "examples": [
+   {
+    "input": "bd\nebbd\nea\neeba\ndbcb\nebd",
+    "output": "3\nbd\nebd\nebbd"
+   }
+  ],
+  "testCases": [
+   {
+    "input": "accff\nccb\nabeea\nac\nafa\naa\naccb\nacccb\nfed",
+    "expected": "3\nac\naccb\nacccb"
+   },
+   {
+    "input": "edab\ncdc\nbcae\nbce\ncddb\nf\nbcaea\nefe\nbcaeea\ncdfa",
+    "expected": "4\nbce\nbcae\nbcaea\nbcaeea"
+   },
+   {
+    "input": "ebabb\nceedb\nbfe\neabb\nebbacbb\nab\nf\neab\nebbabb",
+    "expected": "6\nab\neab\neabb\nebabb\nebbabb\nebbacbb"
+   }
+  ],
+  "solutions": {
+   "typescript": "// 单词覆盖链：DP 最长链。\nfunction solve(input: string): string {\n  const words = input.split(/\\n/).map(w => w.trim()).filter(w => w.length > 0);\n  if (words.length === 0) return '';\n  words.sort((a, b) => a.length - b.length);\n  const n = words.length;\n  const cc: number[][] = Array.from({ length: n }, () => new Array(26).fill(0));\n  for (let i = 0; i < n; i++)\n    for (const ch of words[i]) cc[i][ch.charCodeAt(0) - 97]++;\n  const f: number[] = new Array(n).fill(1);\n  const pre: number[] = Array.from({ length: n }, (_, k) => k);\n  for (let i = 0; i < n; i++) {\n    for (let j = 0; j < i; j++) {\n      let ok = true;\n      for (let c = 0; c < 26; c++) if (cc[i][c] < cc[j][c]) { ok = false; break; }\n      if (ok && f[j] + 1 > f[i]) { f[i] = f[j] + 1; pre[i] = j; }\n    }\n  }\n  let res = 0;\n  for (let i = 0; i < n; i++) if (f[i] > f[res]) res = i;\n  const chain: string[] = [];\n  let x = res;\n  while (true) {\n    chain.push(words[x]);\n    if (pre[x] === x) break;\n    x = pre[x];\n  }\n  chain.reverse();\n  return String(chain.length) + '\\n' + chain.join('\\n');\n}\n\nif (require.main === module) {\n  let buf = '';\n  process.stdin.on('data', d => buf += d);\n  process.stdin.on('end', () => console.log(solve(buf)));\n}\n",
+   "python": "# 单词覆盖链：按长度排序，DP 求最长覆盖链并输出。\nimport sys\n\ndef main():\n    raw = sys.stdin.read()\n    words = [ln.strip() for ln in raw.split('\\n') if ln.strip()]\n    if not words:\n        return\n    words.sort(key=len)\n    n = len(words)\n    cc = [[0] * 26 for _ in range(n)]\n    for i, w in enumerate(words):\n        for ch in w:\n            cc[i][ord(ch) - 97] += 1\n    f = [1] * n\n    pre = list(range(n))\n    for i in range(n):\n        for j in range(i):\n            if all(cc[i][c] >= cc[j][c] for c in range(26)):\n                if f[j] + 1 > f[i]:\n                    f[i] = f[j] + 1\n                    pre[i] = j\n    res = 0\n    for i in range(n):\n        if f[i] > f[res]:\n            res = i\n    chain = []\n    x = res\n    while True:\n        chain.append(words[x])\n        if pre[x] == x:\n            break\n        x = pre[x]\n    chain.reverse()\n    print(len(chain))\n    for w in chain:\n        print(w)\n\nif __name__ == '__main__':\n    main()\n",
+   "java": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        List<String> list = new ArrayList<>();\n        while (sc.hasNextLine()) {\n            String line = sc.nextLine().trim();\n            if (!line.isEmpty()) list.add(line);\n        }\n        if (list.isEmpty()) return;\n        list.sort(Comparator.comparingInt(String::length));\n        int n = list.size();\n        int[][] cc = new int[n][26];\n        for (int i = 0; i < n; i++)\n            for (char ch : list.get(i).toCharArray()) cc[i][ch - 'a']++;\n        int[] f = new int[n];\n        int[] pre = new int[n];\n        Arrays.fill(f, 1);\n        for (int i = 0; i < n; i++) pre[i] = i;\n        for (int i = 0; i < n; i++) {\n            for (int j = 0; j < i; j++) {\n                boolean ok = true;\n                for (int c = 0; c < 26; c++) if (cc[i][c] < cc[j][c]) { ok = false; break; }\n                if (ok && f[j] + 1 > f[i]) { f[i] = f[j] + 1; pre[i] = j; }\n            }\n        }\n        int res = 0;\n        for (int i = 0; i < n; i++) if (f[i] > f[res]) res = i;\n        List<String> chain = new ArrayList<>();\n        int x = res;\n        while (true) {\n            chain.add(list.get(x));\n            if (pre[x] == x) break;\n            x = pre[x];\n        }\n        Collections.reverse(chain);\n        System.out.println(chain.size());\n        for (String w : chain) System.out.println(w);\n    }\n}\n"
+  }
+ }
+]

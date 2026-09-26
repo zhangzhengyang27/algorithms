@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+*.log
+backups
+.superpowers
+.workbuddy
+
+# 排除 prisma 下的大体积导入产物（约 500MB），但保留 schema/migrations/seed
+prisma/*.sql
+prisma/*.json
+prisma/cr_*
+scripts
