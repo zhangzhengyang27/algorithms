@@ -56,11 +56,12 @@ createdb algo_platform
 cd backend
 cp ../.env.example .env        # 然后填入真实 DATABASE_URL / JWT_SECRET
 pnpm run prisma:generate
-pnpm exec prisma migrate deploy   # ⚠️ 用 deploy
+pnpm run prisma:migrate        # = prisma migrate deploy（应用已提交的迁移）
 pnpm run prisma:seed
 ```
 
-> 🚨 **不要用 `pnpm run prisma:migrate`。** 该脚本的实际值是 `prisma migrate dev`，对已有数据的库会触发 reset 并清空数据（`docs/DEPLOYMENT.md` 亦明令禁止）。仓库里目前没有提供一个安全的 migrate 脚本，请显式敲 `prisma migrate deploy`。
+> 🔒 迁移脚本已提供安全映射：`pnpm run prisma:migrate` = `prisma migrate deploy`、`prisma:status` = `prisma migrate status`、`prisma:push` = `prisma db push`（改 schema 用后者）。
+> **仍不要手敲 `prisma migrate dev`** —— 本项目存在过迁移 drift，它会强制 `migrate reset` 从而清空数据（详见 `docs/DEPLOYMENT.md`）。
 
 4. 前端本地开发还需要一个后端不需要的变量（否则所有 API 调用会静默失败，见 `PROJECT_MAP.md` §7）：
 ```bash

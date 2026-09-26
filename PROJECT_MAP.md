@@ -225,11 +225,11 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 7 | `frontend/frontend/` 疑似误建的嵌套目录 | ✅ 已删除（空目录） |
 | 8 | **`cd backend && pnpm install` 直接失败**：`ERR_PNPM_CONFIG_CONFLICT_BUILT_DEPENDENCIES`。根因是 pnpm 10.30 下 `package.json` 的 `pnpm.onlyBuiltDependencies` 与 `pnpm-workspace.yaml` 的 `dangerouslyAllowAllBuilds` 互斥（二者曾分别于 08-06 / 08-15 加入，互不知晓） | ✅ 已修复：移除该 flag，并把白名单补全为 `@prisma/client / @prisma/engines / bcrypt / prisma / unrs-resolver`（原 flag 是为绕开 prisma 构建脚本被拦而加的粗暴替代）。已实跑验证 install / `prisma validate` / build / test 全绿 |
 | 9 | 本文自身长期过期：仍描述 `TutorialsModule`、7 个 model、`sync-tutorials.ts`、`TutorialsApi`、Next.js 15、前端 `:3000`、`lib/visualizers/sorting-visualizer.ts`、根目录截图 | ✅ 本文 §1/§2/§3/§5/§6/§7/§9 已按磁盘实测重写 |
-| 10 | `backend/package.json` 的 `prisma:migrate` 脚本 = `prisma migrate dev`，即文档自己禁止的清库命令 | ⚠️ **未修**，见 §9 危险提示 |
+| 10 | `backend/package.json` 的 `prisma:migrate` 脚本值是 `prisma migrate dev`，即文档自己禁止的清库命令，而它是仓库里唯一叫 migrate 的脚本 | ✅ 已改：`prisma:migrate` → `prisma migrate deploy`，并补 `prisma:status`（`migrate status`）与 `prisma:push`（`db push`，即 DEPLOYMENT.md 指定的改 schema 路径）。全仓已无任何可执行面调用 `migrate dev`，仅存于文档警告文字 |
 | 11 | `backend/devDependencies` 含 `eslint-config-next@16`（Next 专用预设），且后端无 `lint` 脚本 | ✅ 已移除 `eslint-config-next` 与同样无用的 `@eslint/eslintrc`（后端无任何 eslint 配置文件，二者零引用；前端 `eslint.config.mjs` 确实 import 前者，保留）。锁文件已重建并通过 `--frozen-lockfile` |
 | 12 | 本地 node v24 与 Dockerfile `node:22-slim` 不一致；`package.json` 无 `engines` 约束 | 🔶 两端已补 `"engines": { "node": ">=22" }`（取 `>=22` 是因为 v24 实测全绿，写死 22 反而会把本地开发判为非法）；未开 `engine-strict`，故仍为提示性约束 |
 | 13 | `next.config.ts` rewrite 兜底 host 为 compose 服务名 `http://backend:40001`，新克隆无 `.env.local` 则 API 全挂 | ✅ 兜底改为 `http://localhost:40001`；生产由 compose 显式注入服务名，行为不变。`.env.example` 也补了该项说明 |
-| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，此前前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | 🔶 部分改善：新增 `data-structures/index.test.ts` 92 例（前端 41→133），并已用变异测试验证其判别力。**126 个面板与 3050 行 tracer 仍为零测试**，这是当前最大的质量缺口 |
+| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，此前前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | 🔶 部分改善：新增 `data-structures/index.test.ts` 92 例 + `lib/visualizer-registry.test.ts` 13 例（前端 41→146），均经变异/漂移注入验证判别力。**126 个面板与 3050 行 tracer 的内容正确性仍为零测试**，这是当前最大的质量缺口 |
 | 15 | `frontend/` 此前无 `test` 脚本（有 `jest.config.cjs` 却无入口） | ✅ 已补 `"test": "jest"` |
 | 16 | `.env.example` 与 `docker-compose.yml` 注释里写了内网真实地址与库用户名 | ✅ 已改为占位符；真实地址仅存在于不入库的 `backend/.env` |
 | 17 | README 声明 MIT 但无 `LICENSE` 文件 | ✅ 已补（版权行取自 git identity，若不符请改） |
@@ -238,6 +238,7 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 20 | `UnionFind1-4` 的 `size` 语义是**元素个数 n**，不随 `union` 变化，接口未暴露连通分量数 | ⚠️ 教学易误解（含本文旧表述倾向）。要分量数需自行加 `count` 字段；测试已改为按 `find`/`isConnected` 断言连通关系 |
 | 21 | `MapSum.sum(prefix)` 是「所有以该前缀开头的整词权重之和」，因此 `sum('ap')` 会把 `apt` 也算进去 | ✅ 非缺陷，但极易误读，已在测试中用注释钉住 |
 | 22 | **CI 首跑在 `npx prisma validate` 处失败**（frontend job 全绿）：`prisma validate` 虽从不连库，却要求 `DATABASE_URL` **已定义**，未定义报 `P1012`。本地永远测不出来，因为 `backend/.env` 就在磁盘上，而它被 gitignore、CI 上不存在 | ✅ 已在 `ci.yml` 的 backend job 给 job 级占位 `DATABASE_URL`。复现与验证方式：把 schema 单独复制到无 `.env` 的目录跑 validate（必现 P1012）→ 再临时移走 `backend/.env` 跑完 validate/generate/build/test 四步（全 rc=0）后原样还原 |
+| 23 | `visualizerRegistry` 用**字符串**按名字取命名导出（`mod[name]`），所以「面板里组件改名」「注册表写错文件名」「`tutorialToVisualizer` 指向不存在的 slug」这三类都**过不了运行时但过得了 `tsc`** —— 因为 `named(loader, "SortingPanel")` 的第二个参数是裸字符串，没有字面量约束 | ✅ 已加 `lib/visualizer-registry.test.ts`（13 例）作绊线。经漂移注入验证生效：改组件名 / 删面板文件 ×2 / 映射写错 slug ×3 种变体，全部被捕获。含「解析器自检」下限断言，防止正则失效导致空集合全过的假绿 |
 
 ---
 
@@ -265,8 +266,10 @@ pnpm exec prisma migrate deploy      # ← 生产用这个
 # ⚠️ 见下方危险提示
 ```
 
-> 🚨 **危险：`backend/package.json` 的 `prisma:migrate` 脚本值是 `prisma migrate dev`。**
-> 这正是 `README.md` 与 `docs/DEPLOYMENT.md` 明令禁止、且注释写明「会触发 reset 清空数据」的命令，而它是仓库里**唯一**名为 migrate 的脚本 —— 照着脚本名敲就会清库。改动 schema 请显式用 `prisma db push`（开发）或 `prisma migrate deploy`（生产），并在修好这个脚本前把它当作陷阱。
+> ✅ 迁移脚本已对齐安全路径（2026-09-26）：`prisma:migrate` = `prisma migrate deploy`、`prisma:status` = `prisma migrate status`、`prisma:push` = `prisma db push`。
+> 历史坑：`prisma:migrate` 一度指向 `prisma migrate dev`，而它正是下面这段禁止的命令 —— 照脚本名敲就会清库。
+
+> 🚨 **仍然禁止 `prisma migrate dev`**（现仓库里已无任何脚本调用它，但手敲依然危险）：本项目存在过迁移历史 drift（`tutorials` 表 2026-08-04 手动 DROP），`migrate dev` 会检测到 drift 并强制要求 `migrate reset`，从而**清空全部数据**。改 schema 用 `prisma db push`，应用已提交的迁移用 `prisma migrate deploy`，核对状态用 `prisma migrate status`。
 
 > ⚠️ 旧版本文在此列的 `npx ts-node prisma/sync-tutorials.ts` 已随教程后端移除而不存在（文件已删），教程不再需要同步步骤。
 
