@@ -237,6 +237,7 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 19 | **`BSTMap` / `BSTSet` 名不符实且字符串键静默失效**：实现是两条平行数组 + 线性 `findIndex`，并非二叉树；不传比较器时默认 `a - b`，字符串相减得 `NaN`，`NaN === 0` 恒假 → `get`/`contains` 永远未命中，`add` 会不断追加同名键 | ⚠️ 未修。当前**无任何页面/组件引用**（仅 `data-structures/index.ts` 对外导出），所以生产影响面为零，但一旦被用就是静默错误。新测试改用 number 键走其受支持的契约——**没有**把该缺陷固化为「预期行为」 |
 | 20 | `UnionFind1-4` 的 `size` 语义是**元素个数 n**，不随 `union` 变化，接口未暴露连通分量数 | ⚠️ 教学易误解（含本文旧表述倾向）。要分量数需自行加 `count` 字段；测试已改为按 `find`/`isConnected` 断言连通关系 |
 | 21 | `MapSum.sum(prefix)` 是「所有以该前缀开头的整词权重之和」，因此 `sum('ap')` 会把 `apt` 也算进去 | ✅ 非缺陷，但极易误读，已在测试中用注释钉住 |
+| 22 | **CI 首跑在 `npx prisma validate` 处失败**（frontend job 全绿）：`prisma validate` 虽从不连库，却要求 `DATABASE_URL` **已定义**，未定义报 `P1012`。本地永远测不出来，因为 `backend/.env` 就在磁盘上，而它被 gitignore、CI 上不存在 | ✅ 已在 `ci.yml` 的 backend job 给 job 级占位 `DATABASE_URL`。复现与验证方式：把 schema 单独复制到无 `.env` 的目录跑 validate（必现 P1012）→ 再临时移走 `backend/.env` 跑完 validate/generate/build/test 四步（全 rc=0）后原样还原 |
 
 ---
 

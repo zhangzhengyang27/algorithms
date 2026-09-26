@@ -42,6 +42,11 @@ jobs:
   backend:
     name: backend (prisma · build · test)
     runs-on: ubuntu-latest
+    # prisma validate / generate 只解析 schema，从不连库；但 schema 里的
+    # datasource url = env("DATABASE_URL") 要求该变量「已定义」，否则报 P1012。
+    # backend/.env 被 gitignore，CI 上不存在，所以在此给一个占位值。
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_placeholder
     defaults:
       run:
         working-directory: backend
