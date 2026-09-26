@@ -38,7 +38,7 @@ interface KMPState {
   message: string;
 }
 
-function buildSteps(text: string, pattern: string): VizStep<KMPState>[] {
+export function buildSteps(text: string, pattern: string): VizStep<KMPState>[] {
   const steps: VizStep<KMPState>[] = [];
   const m = pattern.length;
   const next = new Array(m).fill(0);

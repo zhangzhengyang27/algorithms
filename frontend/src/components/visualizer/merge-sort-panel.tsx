@@ -31,7 +31,7 @@ interface MergeState {
   message: string;
 }
 
-function buildSteps(input: number[]): VizStep<MergeState>[] {
+export function buildSteps(input: number[]): VizStep<MergeState>[] {
   const steps: VizStep<MergeState>[] = [];
   const arr = [...input];
 

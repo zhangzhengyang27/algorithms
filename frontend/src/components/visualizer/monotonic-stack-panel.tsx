@@ -28,7 +28,7 @@ interface MonotonicState {
   highlight: number[];              // 高亮的 arr 下标
 }
 
-function buildSteps(arr: number[]): VizStep<MonotonicState>[] {
+export function buildSteps(arr: number[]): VizStep<MonotonicState>[] {
   const steps: VizStep<MonotonicState>[] = [];
   const ans = new Array(arr.length).fill(-1);
   const stack: number[] = [];

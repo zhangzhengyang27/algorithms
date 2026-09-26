@@ -10,10 +10,14 @@ import { lazy, type ComponentType } from "react";
 type LazyPanel = ComponentType;
 
 // 面板组件均为命名导出，这里统一适配为 default 供 lazy 使用。
-function named<T extends ComponentType>(loader: () => Promise<Record<string, T>>, name: string) {
+// 注意 loader 的返回类型刻意写成 Record<string, unknown> 而非 Record<string, ComponentType>：
+// 一旦面板为了单测导出 buildSteps（纯函数，见 §8 第 26 项），后者会要求模块的**每个**导出
+// 都是组件，从而在 next build 的类型检查阶段直接报错。按键名取组件的约束本来就不在类型里
+// （name 是裸字符串），这里放宽不会损失任何检查强度。
+function named<T extends ComponentType>(loader: () => Promise<Record<string, unknown>>, name: string) {
   return lazy(async () => {
     const mod = await loader();
-    return { default: mod[name] };
+    return { default: mod[name] as T };
   });
 }
 

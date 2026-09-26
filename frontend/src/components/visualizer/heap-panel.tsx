@@ -34,7 +34,7 @@ interface HeapState {
   message: string;
 }
 
-function buildSteps(values: number[]): VizStep<HeapState>[] {
+export function buildSteps(values: number[]): VizStep<HeapState>[] {
   const steps: VizStep<HeapState>[] = [];
   const heap: number[] = [];
 
@@ -107,7 +107,7 @@ function buildSteps(values: number[]): VizStep<HeapState>[] {
       if (right < heap.length && heap[right] > heap[largest]) largest = right;
       if (largest === i) {
         steps.push({
-          state: { heap: [...heap], highlightIndices: [i], swapIndices: null, message: `堆顶 ${heap[i]} 已满足堆序，下沉结束` },
+          state: { heap: [...heap], highlightIndices: [i], swapIndices: null, message: i === 0 ? `堆顶 ${heap[i]} 已满足堆序，下沉结束` : `下标 ${i} 的 ${heap[i]} 已满足堆序，下沉结束` },
           description: '下沉结束，堆序恢复',
           codeLine: 17,
         });

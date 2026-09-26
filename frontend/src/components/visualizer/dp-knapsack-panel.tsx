@@ -60,7 +60,7 @@ function binarySplit(w: number, v: number, count: number): Item[] {
   return result;
 }
 
-function buildSteps(rawItems: { w: number; v: number; count: number }[], W: number, mode: Mode): VizStep<KnapsackState>[] {
+export function buildSteps(rawItems: { w: number; v: number; count: number }[], W: number, mode: Mode): VizStep<KnapsackState>[] {
   const steps: VizStep<KnapsackState>[] = [];
 
   let items: Item[];

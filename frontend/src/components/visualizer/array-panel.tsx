@@ -36,7 +36,7 @@ interface ArrayState {
   message: string;
 }
 
-function buildSteps(init: number[], insPos: number, insVal: number, delPos: number): VizStep<ArrayState>[] {
+export function buildSteps(init: number[], insPos: number, insVal: number, delPos: number): VizStep<ArrayState>[] {
   const steps: VizStep<ArrayState>[] = [];
   const capacity = init.length + 3;
   const cells: (number | null)[] = new Array(capacity).fill(null);

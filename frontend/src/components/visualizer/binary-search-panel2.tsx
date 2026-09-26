@@ -28,7 +28,7 @@ interface BinSearchState {
   message: string;
 }
 
-function buildSteps(array: number[], target: number): VizStep<BinSearchState>[] {
+export function buildSteps(array: number[], target: number): VizStep<BinSearchState>[] {
   const steps: VizStep<BinSearchState>[] = [];
   const sorted = [...array].sort((a, b) => a - b);
   let left = 0;

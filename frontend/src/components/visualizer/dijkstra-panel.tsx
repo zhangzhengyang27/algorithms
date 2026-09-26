@@ -36,7 +36,7 @@ interface DijkstraState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number, number][], src: number): VizStep<DijkstraState>[] {
+export function buildSteps(n: number, edges: [number, number, number][], src: number): VizStep<DijkstraState>[] {
   const steps: VizStep<DijkstraState>[] = [];
   const adj: Edge[][] = Array.from({ length: n }, () => []);
   for (const [u, v, w] of edges) {

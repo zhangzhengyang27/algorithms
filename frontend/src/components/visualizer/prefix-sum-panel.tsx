@@ -27,7 +27,7 @@ interface PrefixState {
   message: string;
 }
 
-function buildSteps(nums: number[], queries: [number, number][]): VizStep<PrefixState>[] {
+export function buildSteps(nums: number[], queries: [number, number][]): VizStep<PrefixState>[] {
   const steps: VizStep<PrefixState>[] = [];
   const prefix = new Array(nums.length + 1).fill(0);
 

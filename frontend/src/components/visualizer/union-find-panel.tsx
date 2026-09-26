@@ -43,7 +43,7 @@ function find(parent: number[], x: number): number {
   return x;
 }
 
-function buildSteps(n: number, ops: UnionOp[]): VizStep<UFState>[] {
+export function buildSteps(n: number, ops: UnionOp[]): VizStep<UFState>[] {
   const steps: VizStep<UFState>[] = [];
   const parent = Array.from({ length: n }, (_, i) => i);
   const rank = new Array(n).fill(0);

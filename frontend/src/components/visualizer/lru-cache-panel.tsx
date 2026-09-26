@@ -37,7 +37,7 @@ interface LRUState {
 
 type Op = { type: 'get'; key: number } | { type: 'put'; key: number; val: number };
 
-function buildSteps(capacity: number, ops: Op[]): VizStep<LRUState>[] {
+export function buildSteps(capacity: number, ops: Op[]): VizStep<LRUState>[] {
   const steps: VizStep<LRUState>[] = [];
   let list: LRUEntry[] = [];
 

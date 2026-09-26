@@ -62,7 +62,7 @@ function treeToFlat(node: TreeNode | null, depth: number, pos: number, result: {
   treeToFlat(node.right, depth + 1, pos * 2 + 1, result);
 }
 
-function buildSteps(values: number[]): VizStep<BSTState>[] {
+export function buildSteps(values: number[]): VizStep<BSTState>[] {
   const steps: VizStep<BSTState>[] = [];
   let tree: TreeNode | null = null;
 
