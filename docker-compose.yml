@@ -1,9 +1,9 @@
 # 算法可视化学习平台 · NAS Docker 部署
-# 架构：浏览器 → (frp/VPS) → frontend(:4000) → rewrites 同源代理 → backend(:40001) → dev-stack PG16(192.168.1.18:5433)
+# 架构：浏览器 → (frp/VPS) → frontend(:4000) → rewrites 同源代理 → backend(:40001) → dev-stack PG16
 #
 # 说明：
 # - PostgreSQL 复用 NAS 上已有的 dev-stack PostgreSQL 16（不在本 compose 管理），
-#   后端通过 backend/.env 的 DATABASE_URL 直连 192.168.1.18:5433。
+#   后端通过 backend/.env 的 DATABASE_URL 直连；真实库地址只写在 .env（不入库），不要写进本文件。
 # - 首次部署需在 dev-stack PG 中先建库 `algo_platform`（migrate deploy 只建表不建库）。
 # - 前端 build 时不传 NEXT_PUBLIC_API_URL，运行时由下方 environment 注入 http://backend:40001 做同源代理。
 # - NODE_ENV=production 时登录 cookie 带 secure，需经 HTTPS（VPS Nginx+Certbot）访问。

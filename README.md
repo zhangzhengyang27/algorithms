@@ -4,71 +4,81 @@
 
 ## 功能特性
 
-- **90+ 交互式可视化面板** - 覆盖排序 / 搜索 / 数组 / 链表 / 栈 / 队列 / 树（BST/AVL/红黑/B 树/线段树/…）/ 图论 / 动态规划 / 字符串 / 数论 / 计算几何等（下两行仅为代表性子集）
-- **排序算法可视化** - 冒泡、快排、归并、堆排等排序算法的动画演示
-- **搜索算法可视化** - 二分查找、双指针等搜索类算法的动态演示
-- **Monaco 代码编辑器** - 支持语法高亮和在线运行
-- **算法教程** - Markdown 格式的详细教程
-- **题目练习** - LeetCode 风格题目
-- **学习进度追踪** - 记录刷题进度
+- **126 个交互式可视化面板** - 覆盖排序 / 搜索 / 数组 / 链表 / 栈 / 队列 / 树（BST/AVL/红黑/B 树/线段树/树状数组/Treap/…）/ 图论 / 动态规划 / 字符串 / 数论 / 计算几何，共 127 个可视化路由页
+- **137 篇算法教程** - Markdown 撰写，Mermaid 配图，Python/TS 双语代码页签，跨文档跳转与上/下篇导航
+- **题库** - LeetCode 风格题目（19 个题页），含题解页签、公司出现频次、题目评论
+- **Monaco 代码编辑器 + 在线执行** - 前端内置 Java/Python 模拟执行器，把代码运行过程逐步可视化
+- **学习闭环** - 学习进度追踪（含活动日历）、错题本、学习计划、技能路线图、统计面板
+- **账号与权限** - 注册/登录/JWT 刷新，`ADMIN` 角色才能增删改题目
 
 ## 技术栈
 
 ### 前端
-- Next.js 15 (App Router)
+- Next.js 16 (App Router)
 - React 19
 - TypeScript 5
 - Tailwind CSS 4
 - Zustand (状态管理)
+- Monaco 编辑器 · Mermaid
 
 ### 后端
 - NestJS 11
-- Node.js 22
 - Prisma 6
-- PostgreSQL 17
+- PostgreSQL（版本取决于你的实例，见 `PROJECT_MAP.md` §2 的口径说明）
+- Passport / JWT · Swagger · @nestjs/throttler
+
+> 生产镜像钉的是 `node:22-slim`；`package.json` 目前没有 `engines` 字段来约束本地 Node 版本。
 
 ## 快速开始
 
 ### 安装依赖
 
+包管理器用 **pnpm**（前后端各为独立 workspace，各有 `pnpm-lock.yaml`；不要混用 `npm install`，会绕过锁文件）：
+
 ```bash
 # 前端
-cd frontend
-npm install
+cd frontend && pnpm install --frozen-lockfile
 
 # 后端
-cd backend
-npm install
+cd backend && pnpm install --frozen-lockfile
 ```
 
 ### 配置数据库
 
-1. 确保 PostgreSQL 17 已运行
+1. 确保 PostgreSQL 已运行（README 旧版写 17，而 `docker-compose.yml` 注释指向 NAS 上的 PG 16；实际以你的实例为准）
 2. 创建数据库：
 ```bash
 createdb algo_platform
 ```
 
-3. 运行迁移和种子数据：
+3. 生成 client、应用迁移、灌种子数据：
 ```bash
 cd backend
-npm run prisma:generate
-npm run prisma:migrate -- --name init
-npm run prisma:seed
+cp ../.env.example .env        # 然后填入真实 DATABASE_URL / JWT_SECRET
+pnpm run prisma:generate
+pnpm exec prisma migrate deploy   # ⚠️ 用 deploy
+pnpm run prisma:seed
 ```
 
-> 教程内容通过 `npx ts-node prisma/sync-tutorials.ts` 从 `frontend/src/app/tutorials/*.md` 同步进数据库（git-as-CMS 模式）；前端页面直接读取各路由下的 `.tsx` 教程页，二者相互独立。新增教程需在 `sync-tutorials.ts` 的 `CATEGORY_MAP` / `TUTORIAL_ORDER` 中登记。
+> 🚨 **不要用 `pnpm run prisma:migrate`。** 该脚本的实际值是 `prisma migrate dev`，对已有数据的库会触发 reset 并清空数据（`docs/DEPLOYMENT.md` 亦明令禁止）。仓库里目前没有提供一个安全的 migrate 脚本，请显式敲 `prisma migrate deploy`。
+
+4. 前端本地开发还需要一个后端不需要的变量（否则所有 API 调用会静默失败，见 `PROJECT_MAP.md` §7）：
+```bash
+# frontend/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:40001
+```
+
+> 教程内容**不需要任何同步步骤**：真相源就是仓库里的 `frontend/src/app/tutorials/*.md`，由 `src/lib/tutorial-page.tsx` 在渲染时直接读取。
+> （历史说明：早期是 git-as-CMS 模式，需跑 `backend/prisma/sync-tutorials.ts` 把 `.md` upsert 进 `Tutorial` 表并在 `CATEGORY_MAP`/`TUTORIAL_ORDER` 登记。该脚本、`TutorialsModule` 与 `Tutorial` model 已于 2026-08-04 一并移除，**新增教程只要放 `.md` 文件即可**。）
 
 ### 启动开发服务器
 
 ```bash
-# 终端 1: 后端
-cd backend
-npm run dev
+# 终端 1: 后端（:40001）
+cd backend && pnpm dev
 
-# 终端 2: 前端
-cd frontend
-npm run dev
+# 终端 2: 前端（:4000）
+cd frontend && pnpm dev
 ```
 
 访问 http://localhost:4000
@@ -77,47 +87,27 @@ npm run dev
 
 ```
 algorithms/
-├── frontend/                    # Next.js 前端
-│   ├── src/
-│   │   ├── app/               # 页面
-│   │   │   ├── tutorials/     # 教程页面
-│   │   │   ├── problems/      # 题目页面
-│   │   │   ├── visualizer/     # 可视化页面
-│   │   │   └── progress/       # 进度页面
-│   │   ├── components/         # 组件
-│   │   ├── lib/
-│   │   │   ├── algorithms/     # 算法实现
-│   │   │   └── visualizers/    # 可视化引擎
-│   │   └── store/              # Zustand 状态
-│   └── package.json
-│
-├── backend/                     # NestJS 后端
-│   ├── src/
-│   │   ├── modules/           # 业务模块
-│   │   │   ├── auth/          # 认证
-│   │   │   ├── tutorials/      # 教程
-│   │   │   ├── problems/       # 题目
-│   │   │   ├── categories/     # 分类
-│   │   │   ├── progress/       # 进度
-│   │   │   └── notes/          # 笔记
-│   │   └── prisma/            # Prisma 服务
-│   ├── prisma/
-│   │   ├── schema.prisma      # 数据库 Schema
-│   │   └── seed.ts            # 种子数据
-│   └── package.json
-│
-└── docs/                      # 设计文档
+├── frontend/            # Next.js 16 前端
+│   └── src/
+│       ├── app/         # 页面路由：tutorials(137 篇 .md + 动态路由) · visualizer(127 页)
+│       │               # problems · progress · wrong-book · study-plan · roadmap · stats · login · settings
+│       ├── components/  # visualizer(126 个 *-panel + stepper 引擎) · tutorial · problem · editor · ui …
+│       ├── lib/         # algorithms/ · java-tracer · python-tracer · solution-tracer · api / api-client
+│       └── store/       # Zustand 状态
+├── backend/             # NestJS 11 后端
+│   ├── src/modules/     # auth · problems · categories · progress · notes · comments（共 6 个，教程模块已移除）
+│   ├── src/common/      # jwt-auth.guard · roles.guard · current-user · roles 装饰器
+│   └── prisma/          # schema.prisma(6 model) · migrations/ · seed.ts
+└── docs/DEPLOYMENT.md   # 部署说明
 ```
 
-## 教程内容
+> 完整工程地图（可视化引擎契约、鉴权流程、数据模型、前后端连接、已知陷阱）见 **[PROJECT_MAP.md](./PROJECT_MAP.md)**。
 
-已导入以下教程：
+## 内容规模
 
-- 排序算法：快速排序、归并排序
-- 搜索算法：二分查找
-- 数据结构：二叉树、二分搜索树、链表、队列、栈、堆、哈希表
-- 高级结构：并查集、线段树、Trie
-- 基础概念：递归
+- 教程 **137 篇** Markdown，覆盖排序、搜索、递归、链表/栈/队列/哈希、各类树（BST/AVL/红黑/B 树/线段树/树状数组/Treap/后缀自动机…）、图论、DP（背包/区间/状压/数位/树形）、字符串、数论、计算几何、复杂度分析。
+- 可视化 **126 个面板 / 127 个路由页**。
+- 题库 **19 题**（数据在 PostgreSQL，非 git）。
 
 ## 演示账号
 
@@ -138,4 +128,4 @@ algorithms/
 
 ## 许可证
 
-MIT
+MIT — 详见 [LICENSE](./LICENSE)。
