@@ -28,7 +28,7 @@ interface QuickState {
   message: string;
 }
 
-function buildSteps(input: number[]): VizStep<QuickState>[] {
+export function buildSteps(input: number[]): VizStep<QuickState>[] {
   const steps: VizStep<QuickState>[] = [];
   const arr = [...input];
   const sorted = new Array(arr.length).fill(false);

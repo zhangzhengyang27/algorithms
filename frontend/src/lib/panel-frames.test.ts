@@ -282,3 +282,140 @@ describe('merge-sort-panel', () => {
     expect(input).toEqual([3, 1, 2]);
   });
 });
+
+// ─── 第二批：排序家族 + 单数组输入的经典题 ────────────────────────────────────
+
+import { buildSteps as quickSort } from '@/components/visualizer/quick-sort-panel';
+import { buildSteps as heapSort } from '@/components/visualizer/heap-sort-panel';
+import { buildSteps as shellSort } from '@/components/visualizer/shell-sort-panel';
+import { buildSteps as countingSort } from '@/components/visualizer/counting-sort-panel';
+import { buildSteps as maxSubarray } from '@/components/visualizer/maximum-subarray-panel';
+import { buildSteps as bestTime } from '@/components/visualizer/best-time-panel';
+import { buildSteps as lisSteps } from '@/components/visualizer/lis-panel';
+import { buildSteps as windowSteps } from '@/components/visualizer/sliding-window-panel';
+import { buildSteps as twoPointers } from '@/components/visualizer/two-pointers-panel';
+import { buildSteps as jumpGame } from '@/components/visualizer/jump-game-panel';
+import { buildSteps as houseRobber } from '@/components/visualizer/house-robber-panel';
+
+const SORTED = [1, 2, 5, 8, 9];
+const SHUFFLES = [[5, 2, 8, 1, 9], [3, 3, 1, 2], [1], [], [9, 8, 7, 6, 5], [4, 2, 4, 2, 4]];
+
+describe('排序家族末帧（quick / heap / shell / counting）', () => {
+  // Array#sort 是独立的参照实现；同时断言多重集守恒，防「丢元素/造元素」这类假排序。
+  for (const [name, build, field] of [
+    ['quick-sort', quickSort, 'array'],
+    ['heap-sort', heapSort, 'array'],
+    ['shell-sort', shellSort, 'arr'],
+    ['counting-sort', countingSort, 'output'],
+  ] as [string, (a: number[]) => any[], string][]) {
+    for (const input of SHUFFLES) {
+      it(`${name} 在 ${JSON.stringify(input)} 上排好序且不丢元素`, () => {
+        const s = lastState(build(input));
+        expect(s[field]).toEqual([...input].sort((a, b) => a - b));
+        expect([...s[field]].sort((a, b) => a - b)).toEqual([...input].sort((a, b) => a - b));
+      });
+    }
+    it(`${name} 不改动入参数组`, () => {
+      const input = [...SORTED].reverse();
+      const snapshot = [...input];
+      build(input);
+      expect(input).toEqual(snapshot);
+    });
+  }
+});
+
+describe('maximum-subarray-panel', () => {
+  for (const nums of [[-2, 1, -3, 4, -1, 2, 1, -5, 4], [-1, -2, -3], [5], [], [1, 2, 3]]) {
+    it(`最大子数组和 ${JSON.stringify(nums)}`, () => {
+      // 参照：O(n^2) 暴力枚举，与面板的 Kadane 单遍实现路径完全不同
+      let ref = nums.length ? nums[0] : 0;
+      for (let i = 0; i < nums.length; i++) {
+        let acc = 0;
+        for (let j = i; j < nums.length; j++) { acc += nums[j]; ref = Math.max(ref, acc); }
+      }
+      expect(lastState(maxSubarray(nums)).maxSum).toBe(ref);
+    });
+  }
+});
+
+describe('best-time-panel（LC 122：可多笔交易）', () => {
+  // 该面板实现的是 lastBuy/lastSold 状态机，即**无限笔**版本；
+  // 参照用「所有正向价差之和」这一完全不同的算法。注意别按 LC 121（单笔）出期望值。
+  for (const prices of [[7, 1, 5, 3, 6, 4], [1, 2, 3, 4, 5], [7, 6, 4, 3, 1], [2, 4, 1], []]) {
+    it(`最大利润 ${JSON.stringify(prices)}`, () => {
+      let ref = 0;
+      for (let i = 1; i < prices.length; i++) if (prices[i] > prices[i - 1]) ref += prices[i] - prices[i - 1];
+      expect(lastState(bestTime(prices)).lastSold).toBe(ref);
+    });
+  }
+});
+
+describe('lis-panel', () => {
+  for (const seq of [[10, 9, 2, 5, 3, 7, 101, 18], [7, 7, 7], [1, 3, 6, 7, 9], [4, 3, 2, 1], []]) {
+    it(`最长递增子序列长度 ${JSON.stringify(seq)}`, () => {
+      const dp = seq.map(() => 1);
+      for (let i = 1; i < seq.length; i++) for (let j = 0; j < i; j++) if (seq[j] < seq[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
+      expect(lastState(lisSteps(seq)).maxLen).toBe(seq.length ? Math.max(...dp) : 0);
+    });
+  }
+});
+
+describe('sliding-window-panel', () => {
+  for (const s of ['abcabcbb', 'bbbbb', 'pwwkew', '', 'dvdf']) {
+    it(`无重复字符最长子串长度 "${s}"`, () => {
+      let ref = 0;
+      for (let i = 0; i < s.length; i++) {
+        const seen = new Set<string>();
+        for (let j = i; j < s.length; j++) { if (seen.has(s[j])) break; seen.add(s[j]); }
+        ref = Math.max(ref, seen.size);
+      }
+      expect(lastState(windowSteps(s)).best).toBe(ref);
+    });
+  }
+});
+
+describe('two-pointers-panel', () => {
+  const cases: [number[], number][] = [[[2, 7, 11, 15], 9], [[1, 3, 5], 8], [[1, 2, 3], 100]];
+  it('末帧给出的下标对确实求和等于 target', () => {
+    for (const [arr, target] of cases) {
+      const s = lastState(twoPointers(arr, target));
+      if (s.found) {
+        const [i, j] = s.foundPair;
+        expect(arr[i] + arr[j]).toBe(target);
+      } else {
+        // 独立暴力判定：确无两数和等于 target
+        let exists = false;
+        for (let i = 0; i < arr.length; i++) for (let j = i + 1; j < arr.length; j++) if (arr[i] + arr[j] === target) exists = true;
+        expect(exists).toBe(false);
+      }
+    }
+  });
+});
+
+describe('jump-game-panel', () => {
+  for (const nums of [[2, 3, 1, 1, 4], [3, 2, 1, 0, 4], [0], [1, 0]]) {
+    it(`可达性 ${JSON.stringify(nums)}`, () => {
+      let reach = 0; // 参照：贪心最远可达
+      for (let i = 0; i < nums.length && i <= reach; i++) reach = Math.max(reach, i + nums[i]);
+      expect(lastState(jumpGame(nums)).reachable[0]).toBe(reach >= nums.length - 1);
+    });
+  }
+
+  // 空数组下「能否从下标 0 到末尾」没有良定义（末尾下标是 -1），所以不断言结论，
+  // 只断言它不崩、且明确提示空输入，而不是渲染「下标 -1」这种句子。
+  it('空输入给一帧明确提示而不是无意义文案', () => {
+    const s = lastState(jumpGame([]));
+    expect(s.reachable).toEqual([]);
+    expect(s.message).toContain('输入为空');
+  });
+});
+
+describe('house-robber-panel', () => {
+  for (const nums of [[2, 7, 9, 3, 1], [1, 2, 3, 1], [2, 1, 1, 2], [5], []]) {
+    it(`最大可偷金额 ${JSON.stringify(nums)}`, () => {
+      let prev2 = 0, prev1 = 0; // 参照：滚动 DP
+      for (const v of nums) { const t = Math.max(prev1, prev2 + v); prev2 = prev1; prev1 = t; }
+      expect(lastState(houseRobber(nums)).cur).toBe(prev1);
+    });
+  }
+});

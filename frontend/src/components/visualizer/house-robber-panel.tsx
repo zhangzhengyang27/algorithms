@@ -25,7 +25,7 @@ interface HRState {
   message: string;
 }
 
-function buildSteps(nums: number[]): VizStep<HRState>[] {
+export function buildSteps(nums: number[]): VizStep<HRState>[] {
   const steps: VizStep<HRState>[] = [];
   const pick = new Array(nums.length).fill(false);
   let prev = 0;

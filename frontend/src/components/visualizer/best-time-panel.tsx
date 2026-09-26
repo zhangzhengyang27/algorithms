@@ -24,7 +24,7 @@ interface BestTimeState {
   message: string;
 }
 
-function buildSteps(prices: number[]): VizStep<BestTimeState>[] {
+export function buildSteps(prices: number[]): VizStep<BestTimeState>[] {
   const steps: VizStep<BestTimeState>[] = [];
   let lastBuy = -prices[0];
   let lastSold = 0;

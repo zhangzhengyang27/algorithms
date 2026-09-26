@@ -22,8 +22,17 @@ interface MaxSubarrayState {
   message: string;
 }
 
-function buildSteps(nums: number[]): VizStep<MaxSubarrayState>[] {
+export function buildSteps(nums: number[]): VizStep<MaxSubarrayState>[] {
   const steps: VizStep<MaxSubarrayState>[] = [];
+  // 空输入（输入框解析非数字文本时会得到 []）会让循环不进，末帧文案成
+  // 「最大子数组和 = -Infinity」。这里按「空集之和为 0」给一帧。
+  if (nums.length === 0) {
+    return [{
+      state: { nums: [], i: -1, curSum: 0, maxSum: 0, range: null, message: '输入为空：请在上方文本框填入逗号分隔的整数' },
+      description: '空输入',
+      codeLine: 1,
+    }];
+  }
   let maxSum = -Infinity;
   let curSum = 0;
   let maxStart = 0;

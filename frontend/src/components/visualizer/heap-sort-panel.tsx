@@ -30,7 +30,7 @@ interface HeapState {
   message: string;
 }
 
-function buildSteps(input: number[]): VizStep<HeapState>[] {
+export function buildSteps(input: number[]): VizStep<HeapState>[] {
   const steps: VizStep<HeapState>[] = [];
   const arr = [...input];
   const n = arr.length;

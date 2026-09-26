@@ -31,7 +31,7 @@ interface WindowState {
   duplicateRight: boolean;
 }
 
-function buildSteps(s: string): VizStep<WindowState>[] {
+export function buildSteps(s: string): VizStep<WindowState>[] {
   const steps: VizStep<WindowState>[] = [];
 
   steps.push({

@@ -33,7 +33,7 @@ interface ShellSortState {
   message: string;
 }
 
-function buildSteps(input: number[]): VizStep<ShellSortState>[] {
+export function buildSteps(input: number[]): VizStep<ShellSortState>[] {
   const arr = [...input];
   const n = arr.length;
   const steps: VizStep<ShellSortState>[] = [];

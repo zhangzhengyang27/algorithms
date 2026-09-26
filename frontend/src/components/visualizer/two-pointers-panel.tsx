@@ -28,7 +28,7 @@ interface TwoPointerState {
   foundPair: [number, number] | null;
 }
 
-function buildSteps(array: number[], target: number): VizStep<TwoPointerState>[] {
+export function buildSteps(array: number[], target: number): VizStep<TwoPointerState>[] {
   const steps: VizStep<TwoPointerState>[] = [];
   const sorted = [...array].sort((a, b) => a - b);
   let left = 0;

@@ -24,7 +24,7 @@ interface LisState {
 
 const MAX_STEPS = 50_000;
 
-function buildSteps(seq: number[]): VizStep<LisState>[] {
+export function buildSteps(seq: number[]): VizStep<LisState>[] {
   const steps: VizStep<LisState>[] = [];
   const lengths = Array(seq.length).fill(1);
   let aborted = false;
@@ -43,7 +43,7 @@ function buildSteps(seq: number[]): VizStep<LisState>[] {
   };
 
   const snapshot = (i: number, j: number, message: string, codeLine: number): VizStep<LisState> => ({
-    state: { seq, lengths: [...lengths], i, j, maxLen: Math.max(...lengths), message },
+    state: { seq, lengths: [...lengths], i, j, maxLen: lengths.length ? Math.max(...lengths) : 0, message },
     description: message,
     codeLine,
   });

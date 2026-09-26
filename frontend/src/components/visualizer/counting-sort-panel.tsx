@@ -26,9 +26,19 @@ interface CountingState {
   message: string;
 }
 
-function buildSteps(input: number[]): VizStep<CountingState>[] {
+export function buildSteps(input: number[]): VizStep<CountingState>[] {
   const steps: VizStep<CountingState>[] = [];
   const arr = [...input];
+  // 输入框用 split(',').map(Number).filter(Number.isFinite) 解析，填入非数字文本就会得到
+  // 空数组；此时 Math.max(...[]) 为 -Infinity，下面 new Array(max + 1) 会抛
+  // RangeError: Invalid array length，整个面板崩掉。空输入单独给一帧。
+  if (arr.length === 0) {
+    return [{
+      state: { array: [], count: [], output: [], max: 0, activeValue: null, message: '输入为空：请在上方文本框填入逗号分隔的非负整数' },
+      description: '空输入',
+      codeLine: 1,
+    }];
+  }
   const max = Math.max(...arr);
 
   const snap = (count: number[], output: (number | null)[], activeValue: number | null, msg: string, codeLine: number): VizStep<CountingState> => ({

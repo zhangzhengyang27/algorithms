@@ -21,8 +21,17 @@ interface JumpGameState {
   message: string;
 }
 
-function buildSteps(nums: number[]): VizStep<JumpGameState>[] {
+export function buildSteps(nums: number[]): VizStep<JumpGameState>[] {
   const steps: VizStep<JumpGameState>[] = [];
+  // 输入框解析非数字文本会得到空数组，此时 goal = -1、reachable[-1]=true，
+  // 文案会渲染成「从下标 0 跳到末尾（下标 -1）」这种无意义句子。空输入单独给一帧。
+  if (nums.length === 0) {
+    return [{
+      state: { nums: [], goal: 0, i: -1, reachable: [], message: '输入为空：请在上方文本框填入逗号分隔的非负整数' },
+      description: '空输入',
+      codeLine: 1,
+    }];
+  }
   const reachable = new Array(nums.length).fill(false);
   let goal = nums.length - 1;
   reachable[goal] = true;
