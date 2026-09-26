@@ -226,13 +226,17 @@ enum：`Difficulty{EASY,MEDIUM,HARD}` · `ProgressStatus{NOT_STARTED,ATTEMPTING,
 | 8 | **`cd backend && pnpm install` 直接失败**：`ERR_PNPM_CONFIG_CONFLICT_BUILT_DEPENDENCIES`。根因是 pnpm 10.30 下 `package.json` 的 `pnpm.onlyBuiltDependencies` 与 `pnpm-workspace.yaml` 的 `dangerouslyAllowAllBuilds` 互斥（二者曾分别于 08-06 / 08-15 加入，互不知晓） | ✅ 已修复：移除该 flag，并把白名单补全为 `@prisma/client / @prisma/engines / bcrypt / prisma / unrs-resolver`（原 flag 是为绕开 prisma 构建脚本被拦而加的粗暴替代）。已实跑验证 install / `prisma validate` / build / test 全绿 |
 | 9 | 本文自身长期过期：仍描述 `TutorialsModule`、7 个 model、`sync-tutorials.ts`、`TutorialsApi`、Next.js 15、前端 `:3000`、`lib/visualizers/sorting-visualizer.ts`、根目录截图 | ✅ 本文 §1/§2/§3/§5/§6/§7/§9 已按磁盘实测重写 |
 | 10 | `backend/package.json` 的 `prisma:migrate` 脚本 = `prisma migrate dev`，即文档自己禁止的清库命令 | ⚠️ **未修**，见 §9 危险提示 |
-| 11 | `backend/devDependencies` 含 `eslint-config-next@16`（Next 专用预设），且后端无 `lint` 脚本 | ⚠️ 未修，属无效依赖 |
-| 12 | 本地 node v24 与 Dockerfile `node:22-slim` 不一致；`package.json` 无 `engines` 约束 | ⚠️ 未修，CI 暂按 22（与生产镜像对齐） |
-| 13 | `next.config.ts` rewrite 兜底 host 为 compose 服务名 `http://backend:40001`，新克隆无 `.env.local` 则 API 全挂 | ⚠️ 未修，见 §7 |
-| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | ⚠️ 未修，已加 CI 门禁但门禁只能守住「已有 53 例」 |
+| 11 | `backend/devDependencies` 含 `eslint-config-next@16`（Next 专用预设），且后端无 `lint` 脚本 | ✅ 已移除 `eslint-config-next` 与同样无用的 `@eslint/eslintrc`（后端无任何 eslint 配置文件，二者零引用；前端 `eslint.config.mjs` 确实 import 前者，保留）。锁文件已重建并通过 `--frozen-lockfile` |
+| 12 | 本地 node v24 与 Dockerfile `node:22-slim` 不一致；`package.json` 无 `engines` 约束 | 🔶 两端已补 `"engines": { "node": ">=22" }`（取 `>=22` 是因为 v24 实测全绿，写死 22 反而会把本地开发判为非法）；未开 `engine-strict`，故仍为提示性约束 |
+| 13 | `next.config.ts` rewrite 兜底 host 为 compose 服务名 `http://backend:40001`，新克隆无 `.env.local` 则 API 全挂 | ✅ 兜底改为 `http://localhost:40001`；生产由 compose 显式注入服务名，行为不变。`.env.example` 也补了该项说明 |
+| 14 | 测试覆盖与资产规模严重不匹配：126 个可视化面板 + 3050 行 tracer 代码，此前前端仅 2 个测试文件 41 例；后端 2 个 spec 12 例 | 🔶 部分改善：新增 `data-structures/index.test.ts` 92 例（前端 41→133），并已用变异测试验证其判别力。**126 个面板与 3050 行 tracer 仍为零测试**，这是当前最大的质量缺口 |
 | 15 | `frontend/` 此前无 `test` 脚本（有 `jest.config.cjs` 却无入口） | ✅ 已补 `"test": "jest"` |
 | 16 | `.env.example` 与 `docker-compose.yml` 注释里写了内网真实地址与库用户名 | ✅ 已改为占位符；真实地址仅存在于不入库的 `backend/.env` |
 | 17 | README 声明 MIT 但无 `LICENSE` 文件 | ✅ 已补（版权行取自 git identity，若不符请改） |
+| 18 | **两个 `Stack` 实现的 `toArray()` 方向相反**：`ArrayStack` 自底向顶（`[1,2,3]`），`LinkedListStack` 自顶向底（`[3,2,1]`），却共用同一条 `Stack<T>` 接口 | ⚠️ 未修。任改一侧都可能翻转依赖它的面板渲染方向，需先确认调用方。新测试按现状**分别**锁定两侧，将来任何一方改动都会强制报错 |
+| 19 | **`BSTMap` / `BSTSet` 名不符实且字符串键静默失效**：实现是两条平行数组 + 线性 `findIndex`，并非二叉树；不传比较器时默认 `a - b`，字符串相减得 `NaN`，`NaN === 0` 恒假 → `get`/`contains` 永远未命中，`add` 会不断追加同名键 | ⚠️ 未修。当前**无任何页面/组件引用**（仅 `data-structures/index.ts` 对外导出），所以生产影响面为零，但一旦被用就是静默错误。新测试改用 number 键走其受支持的契约——**没有**把该缺陷固化为「预期行为」 |
+| 20 | `UnionFind1-4` 的 `size` 语义是**元素个数 n**，不随 `union` 变化，接口未暴露连通分量数 | ⚠️ 教学易误解（含本文旧表述倾向）。要分量数需自行加 `count` 字段；测试已改为按 `find`/`isConnected` 断言连通关系 |
+| 21 | `MapSum.sum(prefix)` 是「所有以该前缀开头的整词权重之和」，因此 `sum('ap')` 会把 `apt` 也算进去 | ✅ 非缺陷，但极易误读，已在测试中用注释钉住 |
 
 ---
 
