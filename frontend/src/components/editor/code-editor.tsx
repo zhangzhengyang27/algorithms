@@ -55,6 +55,7 @@ export function CodeEditor({
   const editorRef = useRef<unknown>(null);
   const currentTheme = useSettingsStore((s) => s.theme);
   const isLight = currentTheme === 'light';
+  const editorFontSize = useSettingsStore((s) => s.fontSize);
 
   const handleEditorDidMount = (editor: unknown) => {
     editorRef.current = editor;
@@ -240,7 +241,7 @@ export function CodeEditor({
           onMount={handleEditorDidMount}
           options={{
             minimap: { enabled: false },
-            fontSize: 14,
+            fontSize: editorFontSize,
             scrollBeyondLastLine: false,
             lineNumbers: 'on',
             tabSize: 2,

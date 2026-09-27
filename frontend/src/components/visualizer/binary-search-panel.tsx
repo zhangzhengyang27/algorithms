@@ -184,7 +184,7 @@ export function BinarySearchPanel() {
         </div>
 
         {/* Bars */}
-        <div className="flex items-end justify-center gap-1 h-48">
+        <div className="flex items-end justify-center gap-1 h-48 overflow-x-auto pb-1">
           {state.array.map((value, index) => (
             <div key={index} className="flex flex-col items-center">
               <div

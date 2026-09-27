@@ -104,7 +104,8 @@ export function TutorialsBrowser({ tutorials }: { tutorials: DisplayTutorial[] }
 
       <div className="grid lg:grid-cols-[200px_1fr] gap-8">
         {/* ─── Sidebar: category filter ─── */}
-        <aside className="anim-fade-up stagger-1">
+        {/* min-w-0：分类条是 nowrap 横向滚动，grid 子项默认 min-width:auto 会把整页撑到 900+px */}
+        <aside className="anim-fade-up stagger-1 min-w-0">
           <div className="lg:sticky lg:top-20">
             <p className="font-mono text-[10px] text-ink-3 uppercase tracking-widest mb-3">
               Categories

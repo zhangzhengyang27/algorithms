@@ -78,7 +78,7 @@ function render(state: MaxSubarrayState) {
   const { nums, i, curSum, maxSum, range, message } = state;
   return (
     <div className="space-y-3">
-      <div className="flex gap-1">
+      <div className="flex gap-1 overflow-x-auto pb-1">
         {nums.map((v, idx) => {
           const inRange = range && idx >= range[0] && idx <= range[1];
           return (

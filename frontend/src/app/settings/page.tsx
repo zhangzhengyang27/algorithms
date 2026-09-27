@@ -170,7 +170,7 @@ export default function SettingsPage() {
             <h2 className="font-display text-sm font-semibold mb-5">关于</h2>
             <div className="space-y-1.5 text-[13px] text-ink-3 font-mono">
               <p>version: 1.0.0</p>
-              <p>stack: Next.js 15 + NestJS 11 + Prisma + PostgreSQL</p>
+              <p>stack: Next.js 16 + NestJS 11 + Prisma + PostgreSQL</p>
             </div>
           </section>
         </div>

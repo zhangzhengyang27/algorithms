@@ -134,7 +134,7 @@ export function Stepper<TState>({
           </select>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">{headerActions}</div>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{headerActions}</div>
       </div>
 
       <div className="bg-surface rounded-xl border border-edge p-6 min-h-[120px]">
@@ -163,10 +163,11 @@ export function Stepper<TState>({
   if (codeLines && codeLines.length > 0) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4" style={{ minHeight: '480px' }}>
-        <div className="lg:col-span-3 space-y-4">
+        {/* min-w-0：grid 子项默认 min-width:auto，代码面板里的长行会把整列撑破页面 */}
+        <div className="lg:col-span-3 min-w-0 space-y-4">
           {controls}
         </div>
-        <div className="lg:col-span-2 min-h-[480px]">
+        <div className="lg:col-span-2 min-w-0 min-h-[480px]">
           <CodePanel
             codeLines={codeLines}
             highlightLine={currentCodeLine}
