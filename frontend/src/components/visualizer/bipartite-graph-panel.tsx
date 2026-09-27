@@ -58,7 +58,7 @@ interface BipartiteState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number][]): VizStep<BipartiteState>[] {
+export function buildSteps(n: number, edges: [number, number][]): VizStep<BipartiteState>[] {
   const steps: VizStep<BipartiteState>[] = [];
   const adj: number[][] = Array.from({ length: n }, () => []);
   for (const [u, v] of edges) { adj[u].push(v); adj[v].push(u); }

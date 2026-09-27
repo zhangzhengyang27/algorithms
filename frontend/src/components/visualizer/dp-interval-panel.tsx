@@ -38,7 +38,7 @@ interface DpIntervalState {
   message: string;
 }
 
-function buildSteps(stones: number[]): VizStep<DpIntervalState>[] {
+export function buildSteps(stones: number[]): VizStep<DpIntervalState>[] {
   const n = stones.length;
   const steps: VizStep<DpIntervalState>[] = [];
   const prefix = new Array(n + 1).fill(0);

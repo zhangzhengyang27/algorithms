@@ -25,7 +25,7 @@ interface RailFenceState {
   message: string;
 }
 
-function buildSteps(str: string, rails: number): VizStep<RailFenceState>[] {
+export function buildSteps(str: string, rails: number): VizStep<RailFenceState>[] {
   const steps: VizStep<RailFenceState>[] = [];
   const fence: string[][] = Array(rails)
     .fill(null)

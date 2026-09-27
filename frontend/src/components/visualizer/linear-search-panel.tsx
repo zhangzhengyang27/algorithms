@@ -23,7 +23,7 @@ interface LinearSearchState {
   message: string;
 }
 
-function buildSteps(nums: number[], target: number): VizStep<LinearSearchState>[] {
+export function buildSteps(nums: number[], target: number): VizStep<LinearSearchState>[] {
   const steps: VizStep<LinearSearchState>[] = [];
 
   steps.push({

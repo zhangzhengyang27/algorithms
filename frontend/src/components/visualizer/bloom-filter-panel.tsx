@@ -32,7 +32,7 @@ function hashes(s: string, m: number): number[] {
   return [h(0, 31), h(7, 17), h(0, 131)].map((x) => ((x % m) + m) % m);
 }
 
-function buildSteps(m: number, items: string[], query: string): VizStep<BloomState>[] {
+export function buildSteps(m: number, items: string[], query: string): VizStep<BloomState>[] {
   const steps: VizStep<BloomState>[] = [];
   const bits = new Array(m).fill(0);
   const inserted: string[] = [];

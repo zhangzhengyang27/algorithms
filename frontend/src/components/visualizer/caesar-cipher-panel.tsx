@@ -35,7 +35,7 @@ function caesar(input: string, k: number): string {
     .join('');
 }
 
-function buildSteps(input: string, k: number): VizStep<CaesarState>[] {
+export function buildSteps(input: string, k: number): VizStep<CaesarState>[] {
   const steps: VizStep<CaesarState>[] = [];
   const chars = input.toLowerCase().split('');
   const result: string[] = [];

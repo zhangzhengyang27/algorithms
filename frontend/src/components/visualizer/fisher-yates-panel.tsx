@@ -20,7 +20,7 @@ interface FisherYatesState {
   message: string;
 }
 
-function buildSteps(arr: number[], seed: number): VizStep<FisherYatesState>[] {
+export function buildSteps(arr: number[], seed: number): VizStep<FisherYatesState>[] {
   const steps: VizStep<FisherYatesState>[] = [];
   const a = [...arr];
   let s = seed;

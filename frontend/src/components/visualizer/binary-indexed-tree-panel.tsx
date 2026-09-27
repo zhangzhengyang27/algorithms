@@ -38,7 +38,7 @@ function lowbit(x: number): number {
   return x & -x;
 }
 
-function buildSteps(nums: number[], queryTarget: number): VizStep<BITState>[] {
+export function buildSteps(nums: number[], queryTarget: number): VizStep<BITState>[] {
   const steps: VizStep<BITState>[] = [];
   const n = nums.length;
   const tree = new Array(n + 1).fill(0);

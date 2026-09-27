@@ -25,7 +25,7 @@ interface RainTerracesState {
   message: string;
 }
 
-function buildSteps(heights: number[]): VizStep<RainTerracesState>[] {
+export function buildSteps(heights: number[]): VizStep<RainTerracesState>[] {
   const steps: VizStep<RainTerracesState>[] = [];
   const water = new Array(heights.length).fill(0);
   let total = 0;

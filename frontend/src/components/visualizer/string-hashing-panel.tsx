@@ -62,7 +62,7 @@ function subHash(h: number[], pw: number[], l: number, r: number): number {
   return ((h[r + 1] - h[l] * pw[r - l + 1]) % MOD + MOD) % MOD;
 }
 
-function buildSteps(s: string, pattern: string): VizStep<HashState>[] {
+export function buildSteps(s: string, pattern: string): VizStep<HashState>[] {
   const steps: VizStep<HashState>[] = [];
   const h = [0];
   const pw = pwArr(Math.max(s.length, pattern.length));

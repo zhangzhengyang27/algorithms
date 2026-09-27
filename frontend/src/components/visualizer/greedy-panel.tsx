@@ -33,7 +33,7 @@ interface GreedyState {
   message: string;
 }
 
-function buildSteps(intervals: Interval[]): VizStep<GreedyState>[] {
+export function buildSteps(intervals: Interval[]): VizStep<GreedyState>[] {
   const steps: VizStep<GreedyState>[] = [];
   const sorted = [...intervals].sort((a, b) => a.end - b.end);
 

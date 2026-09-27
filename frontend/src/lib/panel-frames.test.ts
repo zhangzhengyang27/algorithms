@@ -1106,6 +1106,243 @@ describe('segment-tree-panel', () => {
     });
   }
 });
+
+// ─── 第六批：贪心 / 区间 DP / 图判定 / 字符串与密码 ───────────────────────────
+
+import { buildSteps as rainBuild } from '@/components/visualizer/rain-terraces-panel';
+import { buildSteps as fisherBuild } from '@/components/visualizer/fisher-yates-panel';
+import { buildSteps as bloomBuild } from '@/components/visualizer/bloom-filter-panel';
+import { buildSteps as caesarBuild } from '@/components/visualizer/caesar-cipher-panel';
+import { buildSteps as railBuild } from '@/components/visualizer/rail-fence-panel';
+import { buildSteps as linearBuild } from '@/components/visualizer/linear-search-panel';
+import { buildSteps as greedyBuild } from '@/components/visualizer/greedy-panel';
+import { buildSteps as dpIntBuild } from '@/components/visualizer/dp-interval-panel';
+import { buildSteps as bipBuild } from '@/components/visualizer/bipartite-graph-panel';
+import { buildSteps as bitBuild } from '@/components/visualizer/binary-indexed-tree-panel';
+import { buildSteps as coordBuild } from '@/components/visualizer/coordinate-compression-panel';
+import { buildSteps as hashBuild } from '@/components/visualizer/string-hashing-panel';
+
+function refTrap(h: number[]): number[] {
+  const n = h.length;
+  const L = Array(n).fill(0), R = Array(n).fill(0);
+  for (let i = 0; i < n; i++) L[i] = Math.max(L[i - 1] ?? 0, h[i]);
+  for (let i = n - 1; i >= 0; i--) R[i] = Math.max(R[i + 1] ?? 0, h[i]);
+  return h.map((v, i) => Math.max(0, Math.min(L[i], R[i]) - v));
+}
+
+function refCaesar(s: string, k: number): string {
+  return s.toLowerCase().split('').map((c) => {
+    if (c >= 'a' && c <= 'z') return String.fromCharCode(((c.charCodeAt(0) - 97 + ((k % 26) + 26)) % 26) + 97);
+    return c;
+  }).join('');
+}
+
+function refRail(s: string, rails: number): string {
+  const rows: string[] = Array.from({ length: rails }, () => '');
+  let r = 0, dir = 1;
+  for (const ch of s) {
+    rows[r] += ch;
+    if (rails > 1) { if (r === rails - 1) dir = -1; else if (r === 0) dir = 1; r += dir; }
+  }
+  return rows.join('');
+}
+
+function refMaxNonOverlap(ivs: [number, number][]): number {
+  const sorted = [...ivs].sort((a, b) => a[1] - b[1]);
+  let count = 0, end = -Infinity;
+  for (const [s, e] of sorted) if (s >= end) { count++; end = e; }
+  return count;
+}
+
+function refMergeStones(stones: number[]): number {
+  const n = stones.length;
+  const pre = [0];
+  stones.forEach((v) => pre.push(pre[pre.length - 1] + v));
+  const dp = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let len = 2; len <= n; len++) {
+    for (let i = 0; i + len <= n; i++) {
+      const j = i + len - 1;
+      dp[i][j] = Infinity;
+      for (let k = i; k < j; k++) dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k + 1][j]);
+      dp[i][j] += pre[j + 1] - pre[i];
+    }
+  }
+  return n ? dp[0][n - 1] : 0;
+}
+
+describe('rain-terraces-panel', () => {
+  for (const heights of [[0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1], [4, 1, 2], [3, 0, 3], [], [1, 2, 3]]) {
+    it(`每格积水量等于 min(左前缀最高, 右后缀最高) - 高度（${JSON.stringify(heights)}）`, () => {
+      const s = lastState(rainBuild(heights));
+      expect(s.water).toEqual(refTrap(heights));
+      expect(s.water.reduce((a: number, b: number) => a + b, 0)).toBe(refTrap(heights).reduce((a, b) => a + b, 0));
+    });
+  }
+});
+
+describe('fisher-yates-panel', () => {
+  const src = [1, 2, 3, 4, 5, 6];
+  it('确定性：同 seed 两次结果一致', () => {
+    const a = lastState(fisherBuild(src, 7)).arr;
+    const b = lastState(fisherBuild([...src], 7)).arr;
+    expect(a).toEqual(b);
+  });
+  it('洗牌是排列：元素多重集守恒', () => {
+    for (const seed of [1, 2, 42, 1234, 99]) {
+      const out = lastState(fisherBuild([...src], seed)).arr as number[];
+      expect([...out].sort((x, y) => x - y)).toEqual([...src].sort((x, y) => x - y));
+    }
+  });
+  it('不同 seed 会产生不同结果（否则洗牌等于没洗）', () => {
+    const outs = new Set([1, 2, 3, 4, 5].map((s) => (lastState(fisherBuild([...src], s)).arr as number[]).join(',')));
+    expect(outs.size).toBeGreaterThan(1);
+  });
+});
+
+describe('bloom-filter-panel', () => {
+  // 布隆过滤器只保证「说存在可能错、说不存在一定对」，所以直接查每个已插入元素。
+  const items = ['apple', 'banana', 'cherry'];
+  for (const item of items) {
+    it(`已插入的 "${item}" 不会被判为不存在`, () => {
+      const frames = bloomBuild(64, items, item).map((s: any) => s.state);
+      const asked = frames.filter((f: any) => f.query === item && f.result !== null);
+      expect(asked.length).toBeGreaterThan(0);
+      expect(asked[asked.length - 1].result).toBe('可能存在');
+    });
+  }
+  it('bits 只取 0/1，长度等于 m', () => {
+    const s = lastState(bloomBuild(16, ['a', 'b'], 'a'));
+    expect(s.bits).toHaveLength(16);
+    expect(new Set(s.bits as number[])).toEqual(new Set([0, 1]));
+    expect((s.bits as number[]).some((b) => b === 1)).toBe(true);
+  });
+});
+
+describe('caesar-cipher / rail-fence 编码结果', () => {
+  for (const [text, k] of [['Hello, World!', 3], ['abc', 1], ['zzz', 3], ['x', 0]] as [string, number][]) {
+    it(`凯撒密码 "${text}" 位移 ${k}`, () => {
+      const s = lastState(caesarBuild(text, k));
+      expect((s.result as string[]).join('')).toBe(refCaesar(text, k));
+    });
+  }
+  for (const [str, rails] of [['WEAREDISCOVEREDFLEEATONCE', 3], ['ABCDEF', 2], ['X', 1], ['PAYPALISHIRING', 4]] as [string, number][]) {
+    it(`栅栏密码 "${str}" ${rails} 轨`, () => {
+      const s = lastState(railBuild(str, rails));
+      // 面板把密文存成分轨的 fence 矩阵，读回密文即按轨拼接
+      expect((s.fence as string[][]).map((r) => r.join('')).join('')).toBe(refRail(str, rails));
+      // 轨道矩阵本身也必须容纳全部字符
+      expect((s.fence as string[][]).flat()).toHaveLength(str.length);
+    });
+  }
+});
+
+describe('linear-search-panel', () => {
+  for (const [nums, target] of [[[4, 2, 7, 1, 9], 7], [[4, 2, 7], 99], [[5], 5], [[], 1]] as [number[], number][]) {
+    it(`查找 ${target} 结果等于 Array#indexOf`, () => {
+      const s = lastState(linearBuild(nums, target));
+      expect(s.result).toBe(nums.indexOf(target));
+      expect(s.checked).toBe(target === -1 ? nums.length : (nums.indexOf(target) >= 0 ? nums.indexOf(target) + 1 : nums.length));
+    });
+  }
+});
+
+describe('greedy-panel（区间调度，入参是 {start,end} 对象）', () => {
+  const ivs: [number, number][] = [[1, 3], [2, 5], [4, 7], [6, 7], [5, 9], [8, 10]];
+  const objs = ivs.map(([start, end]) => ({ start, end }));
+  it('贪心选出的数量等于按结束时间排序的独立参照，且两两不重叠', () => {
+    const s = lastState(greedyBuild(objs as any));
+    const chosen = (s.selected as number[]).map((i) => s.sorted[i] as { start: number; end: number });
+    expect(chosen.length).toBe(refMaxNonOverlap(ivs));
+    for (let i = 1; i < chosen.length; i++) expect(chosen[i].start).toBeGreaterThanOrEqual(chosen[i - 1].end);
+  });
+  // 关键边界：区间「首尾相接」（前一区间 end == 后一区间 start）算不算冲突。
+  // 上面那组数据不含相接对，所以把 `start >= lastEnd` 改成 `start > lastEnd`
+  // 时测试原本照样全绿——这条就是补那个分支的。
+  it('首尾相接的区间应当都可选（兼容判定是 >= 而非 >）', () => {
+    const touching: [number, number][] = [[1, 3], [3, 5], [5, 7]];
+    const s = lastState(greedyBuild(touching.map(([start, end]) => ({ start, end })) as any));
+    expect((s.selected as number[]).length).toBe(refMaxNonOverlap(touching));
+    expect((s.selected as number[]).length).toBe(3);
+  });
+  it('空输入不崩', () => {
+    expect(lastState(greedyBuild([] as any)).selected).toEqual([]);
+  });
+});
+
+describe('dp-interval-panel（石子合并最小代价）', () => {
+  for (const stones of [[5, 3, 4, 2], [1], [3, 1, 2], [4, 4, 4, 4]]) {
+    it(`最小合并代价 ${JSON.stringify(stones)}`, () => {
+      const dp = lastState(dpIntBuild(stones)).dp as number[][];
+      const n = stones.length;
+      expect(dp[0][n - 1]).toBe(refMergeStones(stones));
+      for (let i = 0; i < n; i++) expect(dp[i][i]).toBe(0); // 单堆不需合并
+    });
+  }
+});
+
+describe('bipartite-graph-panel', () => {
+  it('偶环 6 圈可二染色：每条边两端颜色不同', () => {
+    const edges: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]];
+    const s = lastState(bipBuild(6, edges));
+    for (const [u, v] of edges) expect(s.color[u]).not.toBe(s.color[v]);
+  });
+  it('匹配结果合法：每条匹配边都在边表里，且每个点至多被匹配一次', () => {
+    const edges: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]];
+    const s = lastState(bipBuild(6, edges));
+    const edgeSet = new Set(edges.flatMap(([a, b]) => [`${a}-${b}`, `${b}-${a}`]));
+    const usedLeft = new Set<number>();
+    for (const [r, l] of (s.matchR as number[]).entries()) {
+      if (l < 0) continue;
+      expect(edgeSet.has(`${l}-${r}`)).toBe(true);
+      expect(usedLeft.has(l)).toBe(false);
+      usedLeft.add(l);
+    }
+    expect(usedLeft.size).toBe(s.matchingCount);
+  });
+});
+
+describe('binary-indexed-tree-panel', () => {
+  const nums = [3, 2, 1, 6, 5, 4, 2];
+  it('前缀和等于朴素求和，且 tree 满足 BIT 定义', () => {
+    const s = lastState(bitBuild(nums, 4));
+    expect(s.querySum).toBe(nums.slice(0, 4).reduce((a, b) => a + b, 0));
+    const tree = s.tree as number[];
+    for (let i = 1; i <= nums.length; i++) {
+      const lo = i - (i & -i); // tree[i] 覆盖 (lo, i]
+      expect(tree[i]).toBe(nums.slice(lo, i).reduce((a, b) => a + b, 0));
+    }
+  });
+  it('查询不同下标都正确', () => {
+    for (const q of [1, 3, 7]) {
+      expect(lastState(bitBuild(nums, q)).querySum).toBe(nums.slice(0, q).reduce((a, b) => a + b, 0));
+    }
+  });
+});
+
+describe('coordinate-compression-panel', () => {
+  for (const original of [[100, 12, 87, 2, 100], [5, 5, 5], [1], []] as number[][]) {
+    it(`离散化 ${JSON.stringify(original)} 等于「去重升序后的下标」`, () => {
+      const uniq = [...new Set(original)].sort((a, b) => a - b);
+      const s = lastState(coordBuild(original));
+      expect(s.sorted).toEqual(uniq);
+      expect(s.mapped).toEqual(original.map((v) => uniq.indexOf(v)));
+    });
+  }
+});
+
+describe('string-hashing-panel', () => {
+  for (const [s, pat] of [['ababcab', 'abc'], ['aaaa', 'aa'], ['hello', 'z'], ['abcabc', 'abc']]) {
+    it(`"${s}" 中找 "${pat}"：报告的命中位置都是真命中，且不漏真命中`, () => {
+      const frames = hashBuild(s, pat).map((x: any) => x.state);
+      const expected: number[] = [];
+      for (let i = 0; i + pat.length <= s.length; i++) if (s.slice(i, i + pat.length) === pat) expected.push(i);
+      const reported = new Set<number>();
+      for (const f of frames) for (const m of (f.matches as number[]) ?? []) reported.add(m);
+      for (const p of reported) expect(s.slice(p, p + pat.length)).toBe(pat); // 无假阳性
+      expect([...reported].sort((a, b) => a - b)).toEqual(expected);          // 无假阴性
+    });
+  }
+});
 // 栈/队列/链表：从**相邻帧的 state 差分**推出实际弹出序列，不去解析文案，
 // 也不把面板自己的输出抄来当基线。
 describe('stack / queue / linked-list 面板', () => {

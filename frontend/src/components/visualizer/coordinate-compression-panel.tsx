@@ -32,7 +32,7 @@ interface CompState {
   message: string;
 }
 
-function buildSteps(original: number[]): VizStep<CompState>[] {
+export function buildSteps(original: number[]): VizStep<CompState>[] {
   const steps: VizStep<CompState>[] = [];
   const sorted = [...new Set(original)].sort((a, b) => a - b);
   const mapped: (number | null)[] = new Array(original.length).fill(null);
