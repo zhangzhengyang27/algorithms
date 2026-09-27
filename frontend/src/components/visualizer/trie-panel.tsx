@@ -32,7 +32,7 @@ interface TrieState {
   insertedWord: string;
 }
 
-function buildSteps(words: string[]): VizStep<TrieState>[] {
+export function buildSteps(words: string[]): VizStep<TrieState>[] {
   const steps: VizStep<TrieState>[] = [];
   const nodes: TrieNode[] = [{ children: {}, isEnd: false }]; // root = 0
 

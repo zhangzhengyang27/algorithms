@@ -23,7 +23,7 @@ interface PowerSetState {
   message: string;
 }
 
-function buildSteps(set: string[]): VizStep<PowerSetState>[] {
+export function buildSteps(set: string[]): VizStep<PowerSetState>[] {
   const steps: VizStep<PowerSetState>[] = [];
   const allSubsets: string[][] = [[]];
   const subset: string[] = [];

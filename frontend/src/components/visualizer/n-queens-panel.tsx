@@ -36,7 +36,7 @@ interface NQueensState {
 
 const MAX_STEPS = 50_000;
 
-function buildSteps(n: number): VizStep<NQueensState>[] {
+export function buildSteps(n: number): VizStep<NQueensState>[] {
   const steps: VizStep<NQueensState>[] = [];
   const cols = new Array(n).fill(-1);
   const solutions: number[][] = [];

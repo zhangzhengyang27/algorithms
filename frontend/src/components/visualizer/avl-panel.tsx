@@ -48,7 +48,7 @@ function cloneNodes(nodes: AVLNode[]): AVLNode[] {
   return nodes.map((n) => ({ ...n }));
 }
 
-function buildSteps(values: number[]): VizStep<AVLState>[] {
+export function buildSteps(values: number[]): VizStep<AVLState>[] {
   const steps: VizStep<AVLState>[] = [];
   let nodes: AVLNode[] = [];
   let root = -1;

@@ -61,7 +61,7 @@ function get(state: HashTableState, key: number): HashTableState {
   };
 }
 
-function buildSteps(seed: number[]): VizStep<HashTableState>[] {
+export function buildSteps(seed: number[]): VizStep<HashTableState>[] {
   const capacity = 5;
   const steps: VizStep<HashTableState>[] = [];
   let state: HashTableState = {

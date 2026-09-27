@@ -55,7 +55,7 @@ function dequeue(state: QueueState): VizStep<QueueState> {
   };
 }
 
-function buildSteps(seed: number[]): VizStep<QueueState>[] {
+export function buildSteps(seed: number[]): VizStep<QueueState>[] {
   const steps: VizStep<QueueState>[] = [];
   let state: QueueState = { items: [], error: null };
   steps.push({ state, description: '初始化空队列', codeLine: 3 });

@@ -20,7 +20,7 @@ interface HanoiState {
   message: string;
 }
 
-function buildSteps(n: number): VizStep<HanoiState>[] {
+export function buildSteps(n: number): VizStep<HanoiState>[] {
   const steps: VizStep<HanoiState>[] = [];
   const poles: number[][] = [
     Array.from({ length: n }, (_, i) => n - i),

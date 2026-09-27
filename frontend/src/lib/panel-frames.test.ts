@@ -419,3 +419,257 @@ describe('house-robber-panel', () => {
     });
   }
 });
+
+// ─── 第三批：字符串 / 递归计数 / AVL / Trie / ADT ─────────────────────────────
+
+import { buildSteps as manacher } from '@/components/visualizer/manacher-panel';
+import { buildSteps as staircase } from '@/components/visualizer/staircase-panel';
+import { buildSteps as hanoi } from '@/components/visualizer/hanoi-tower-panel';
+import { buildSteps as nQueens } from '@/components/visualizer/n-queens-panel';
+import { buildSteps as permutations } from '@/components/visualizer/permutations-panel';
+import { buildSteps as powerSet } from '@/components/visualizer/power-set-panel';
+import { buildSteps as avlBuild } from '@/components/visualizer/avl-panel';
+import { buildSteps as trieBuild } from '@/components/visualizer/trie-panel';
+import { buildSteps as hashTable } from '@/components/visualizer/hash-table-panel';
+import { buildSteps as stackPanel } from '@/components/visualizer/stack-panel';
+import { buildSteps as queuePanel } from '@/components/visualizer/queue-panel';
+import { buildSteps as listPanel } from '@/components/visualizer/linked-list-panel';
+
+function refLongestPalindrome(s: string): number {
+  let best = 0;
+  const grow = (l: number, r: number) => {
+    while (l >= 0 && r < s.length && s[l] === s[r]) { best = Math.max(best, r - l + 1); l--; r++; }
+  };
+  for (let i = 0; i < s.length; i++) { grow(i, i); grow(i, i + 1); }
+  return best;
+}
+
+describe('manacher-panel', () => {
+  for (const s of ['babad', 'cbbd', 'a', '', 'abacaba', 'aaaa']) {
+    it(`最长回文子串长度 "${s}"`, () => {
+      expect(lastState(manacher(s)).maxLen).toBe(refLongestPalindrome(s));
+    });
+  }
+});
+
+describe('staircase-panel', () => {
+  for (const n of [1, 2, 3, 4, 10]) {
+    it(`爬楼梯方法数 n=${n}`, () => {
+      const dp = [0, 1, 2];
+      for (let i = 3; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+      expect(lastState(staircase(n)).steps[n]).toBe(dp[n]);
+    });
+  }
+});
+
+describe('hanoi-tower-panel', () => {
+  for (const n of [1, 2, 3, 4]) {
+    it(`${n} 层：移动次数 2^n-1、大盘永不在小盘之上、末态全部到目标柱`, () => {
+      const frames = hanoi(n).map((st: any) => st.state.poles as number[][]);
+      let moves = 0;
+      for (const p of frames) {
+        // 不变量：每根柱从上到下（数组尾部是顶）必须严格递增，即不许大盘压小盘
+        for (const pole of p) {
+          for (let i = pole.length - 1; i > 0; i--) {
+            expect(pole[i]).toBeLessThan(pole[i - 1]);
+          }
+        }
+      }
+      for (let i = 1; i < frames.length; i++) {
+        const total = frames[i].reduce((a, p) => a + p.length, 0);
+        const prev = frames[i - 1].reduce((a, p) => a + p.length, 0);
+        if (total !== prev) throw new Error('汉诺塔不该改变盘子总数');
+        const moved = frames[i - 1].findIndex((p, idx) => p.length !== frames[i][idx].length);
+        if (moved >= 0) moves++;
+      }
+      expect(moves).toBe(Math.pow(2, n) - 1);
+      const discsOnLast = frames[frames.length - 1][2];
+      expect([...discsOnLast].sort((a, b) => a - b)).toEqual(Array.from({ length: n }, (_, i) => i + 1));
+      expect(frames[frames.length - 1][0]).toEqual([]);
+    });
+  }
+});
+
+function refQueens(n: number): number[][] {
+  const out: number[][] = [];
+  const cols: number[] = [];
+  const ok = (r: number, c: number) => cols.every((pc, pr) => pc !== c && Math.abs(pc - c) !== Math.abs(pr - r));
+  const bt = (r: number) => {
+    if (r === n) { out.push([...cols]); return; }
+    for (let c = 0; c < n; c++) if (ok(r, c)) { cols[r] = c; bt(r + 1); cols.pop(); }
+  };
+  bt(0);
+  return out;
+}
+
+describe('n-queens-panel', () => {
+  for (const n of [1, 4, 5, 6]) {
+    it(`${n} 后：解数与解的合法性都等于独立回溯`, () => {
+      const ref = refQueens(n);
+      const s = lastState(nQueens(n));
+      expect(s.solutionCount).toBe(ref.length);
+      expect([...s.solutions].sort()).toEqual([...ref].sort());
+      for (const sol of s.solutions) {
+        expect(sol).toHaveLength(n);
+        expect(new Set(sol).size).toBe(n); // 每列恰一个
+        expect(new Set(sol.map((c: number, r: number) => c + r)).size).toBe(n);
+        expect(new Set(sol.map((c: number, r: number) => c - r)).size).toBe(n);
+      }
+    });
+  }
+});
+
+describe('permutations / power-set 计数', () => {
+  for (const items of [['a', 'b', 'c'], ['x'], ['1', '2', '3', '4']]) {
+    it(`全排列 ${JSON.stringify(items)} 恰好是 n! 个且无重复`, () => {
+      const res = lastState(permutations(items)).results as string[][];
+      expect(res).toHaveLength(factorial(items.length));
+      expect(new Set(res.map((r) => r.join(','))).size).toBe(res.length);
+      for (const r of res) expect([...r].sort()).toEqual([...items].sort());
+    });
+
+    it(`幂集 ${JSON.stringify(items)} 是 2^n 个子集且互不相同`, () => {
+      const subs = lastState(powerSet(items)).allSubsets as string[][];
+      expect(subs).toHaveLength(2 ** items.length);
+      expect(new Set(subs.map((s) => s.slice().sort().join(','))).size).toBe(subs.length);
+      for (const s of subs) for (const v of s) expect(items).toContain(v);
+    });
+  }
+});
+
+function factorial(k: number): number { return k <= 1 ? 1 : k * factorial(k - 1); }
+
+describe('avl-panel', () => {
+  // 四种失衡形态都要覆盖到，否则「旋转被禁掉」测不出来：升序只触发 RR、
+  // 降序只触发 LL，LR/RL 需要穿插插入。（本轮变异验证就发现过只测升序的盲区。）
+  for (const values of [
+    [5, 3, 8, 1, 9, 7],
+    [1, 2, 3, 4, 5, 6, 7],        // 连续右倾 → RR
+    [7, 6, 5, 4, 3, 2, 1],        // 连续左倾 → LL
+    [3, 1, 2],                    // LR
+    [3, 5, 4],                    // RL
+    [10],
+    [],
+  ]) {
+    it(`AVL ${JSON.stringify(values)}：中序有序、高度字段自洽、平衡因子 ≤1`, () => {
+      const end = lastState(avlBuild(values));
+      const nodes = end.nodes as any[];
+      expect(nodes).toHaveLength(values.length);
+      if (!nodes.length) return;
+      // 根节点不保证是数组下标 0——nodes 是按创建顺序追加的，旋转后根会换人；
+      // 面板自己暴露了 root 字段，必须用它。
+      const inOrder = (i: number, out: number[]) => {
+        if (i < 0) return out;
+        inOrder(nodes[i].left, out);
+        out.push(nodes[i].val);
+        inOrder(nodes[i].right, out);
+        return out;
+      };
+      expect(inOrder(end.root, [])).toEqual([...values].sort((a, b) => a - b));
+
+      const height = (i: number): number => (i < 0 ? 0 : 1 + Math.max(height(nodes[i].left), height(nodes[i].right)));
+      for (let i = 0; i < nodes.length; i++) {
+        expect(nodes[i].height).toBe(height(i)); // 记录的 height 必须与子树推出的一致
+        expect(Math.abs(height(nodes[i].left) - height(nodes[i].right))).toBeLessThanOrEqual(1);
+      }
+      // root 必须真的不被任何节点指为子节点
+      for (const nd of nodes) { expect(nd.left).not.toBe(end.root); expect(nd.right).not.toBe(end.root); }
+    });
+  }
+});
+
+describe('trie-panel', () => {
+  for (const words of [['cat', 'car', 'cate'], ['a'], ['ab', 'abc', 'abcd'], []]) {
+    it(`Trie ${JSON.stringify(words)} 里标记为整词的路径恰好是这些词`, () => {
+      const nodes = lastState(trieBuild(words)).nodes as any[];
+      const found: string[] = [];
+      const walk = (idx: number, prefix: string) => {
+        if (nodes[idx].isEnd) found.push(prefix);
+        for (const [ch, nxt] of Object.entries(nodes[idx].children)) walk(nxt as number, prefix + ch);
+      };
+      if (nodes.length) walk(0, '');
+      expect(found.sort()).toEqual([...words].sort());
+    });
+  }
+});
+
+describe('hash-table-panel', () => {
+  for (const seed of [[4, 8, 15, 16, 23, 42], [1, 2, 3], [7]]) {
+    it(`每个键都落在 key % capacity 的桶里且不丢键`, () => {
+      const s = lastState(hashTable(seed));
+      const seen: number[] = [];
+      s.buckets.forEach((bucket: number[], idx: number) => {
+        for (const k of bucket) {
+          expect(k % s.capacity).toBe(idx);
+          seen.push(k);
+        }
+      });
+      expect([...seen].sort((a, b) => a - b)).toEqual([...seed].sort((a, b) => a - b));
+    });
+  }
+});
+
+// 栈/队列/链表：从**相邻帧的 state 差分**推出实际弹出序列，不去解析文案，
+// 也不把面板自己的输出抄来当基线。
+describe('stack / queue / linked-list 面板', () => {
+  for (const seed of [[1, 2, 3], [9], []]) {
+    it(`stack ${JSON.stringify(seed)}：入栈序即给定的序，出栈序是其逆序（LIFO）`, () => {
+      const frames = stackPanel(seed).map((st: any) => st.state.items as number[]);
+      const pushed: number[] = [], popped: number[] = [];
+      for (let i = 1; i < frames.length; i++) {
+        const a = frames[i - 1], b = frames[i];
+        if (b.length === a.length + 1) pushed.push(b[b.length - 1]);
+        else if (b.length === a.length - 1) popped.push(a[a.length - 1]);
+      }
+      expect(pushed).toEqual(seed);
+      expect(popped).toEqual([...seed].reverse());
+    });
+
+    it(`queue ${JSON.stringify(seed)}：出队序等于入队序（FIFO）`, () => {
+      const frames = queuePanel(seed).map((st: any) => st.state.items as number[]);
+      const pushed: number[] = [], popped: number[] = [];
+      for (let i = 1; i < frames.length; i++) {
+        const a = frames[i - 1], b = frames[i];
+        if (b.length === a.length + 1) pushed.push(b[b.length - 1]);
+        else if (b.length === a.length - 1) popped.push(a[0]);
+      }
+      expect(pushed).toEqual(seed);
+      expect(popped).toEqual(seed);
+    });
+
+    it(`linked-list ${JSON.stringify(seed)}：从表头走到的序列等于独立数组模拟`, () => {
+      const s = lastState(listPanel(seed));
+
+      // 空 seed 时面板取 target = seed[Math.floor(0/2)] 得到 undefined，删除目标是未定义行为，
+      // 这种情况只要求它不崩、遍历能停且不成环，不替它编一个应有的序列。
+      if (seed.length === 0) {
+        expect(Array.isArray(s.nodes)).toBe(true);
+        const only: number[] = [];
+        const seen = new Set<number>();
+        for (let cur = s.headId as number | null; cur !== null;) {
+          expect(seen.has(cur)).toBe(false);
+          seen.add(cur);
+          only.push(s.nodes[cur].value);
+          cur = s.nodes[cur].nextId;
+        }
+        return;
+      }
+
+      // 参照：用普通数组跑同样的三步（头插 0 → 删中间那个 → 反转）
+      const ref = [...seed];
+      ref.unshift(0);
+      ref.splice(ref.indexOf(seed[Math.floor(seed.length / 2)]), 1);
+      ref.reverse();
+
+      const walked: number[] = [];
+      const visited = new Set<number>();
+      for (let cur = s.headId as number | null; cur !== null;) {
+        expect(visited.has(cur)).toBe(false); // 不许成环
+        visited.add(cur);
+        walked.push(s.nodes[cur].value);
+        cur = s.nodes[cur].nextId;
+      }
+      expect(walked).toEqual(ref);
+    });
+  }
+});

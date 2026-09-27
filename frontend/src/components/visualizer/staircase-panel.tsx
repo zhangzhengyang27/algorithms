@@ -19,7 +19,7 @@ interface StaircaseState {
   message: string;
 }
 
-function buildSteps(n: number): VizStep<StaircaseState>[] {
+export function buildSteps(n: number): VizStep<StaircaseState>[] {
   const steps: VizStep<StaircaseState>[] = [];
   const dp = new Array(Math.max(n, 2) + 1).fill(0);
   dp[1] = 1;

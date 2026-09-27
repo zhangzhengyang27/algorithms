@@ -70,13 +70,17 @@ function pop(state: StackState): VizStep<StackState> {
   };
 }
 
-function buildSteps(seed: number[]): VizStep<StackState>[] {
+export function buildSteps(seed: number[]): VizStep<StackState>[] {
   const steps: VizStep<StackState>[] = [];
   let state: StackState = { items: [], highlightTop: false, error: null };
   steps.push({ state, description: '初始化空栈', codeLine: 3 });
   for (const v of seed) {
-    state = push(state, v).state;
-    steps.push(push({ items: [], highlightTop: false, error: null }, v));
+    // 原来这里写的是 push({ items: [], ... }, v)：拿一个**空栈**去算中间帧，
+    // 于是在已有 [1] 之后再 push 2 时，会出现一帧只显示 [2] 的画面（把已入栈的元素弄丢了），
+    // 下一帧又跳回 [1,2]。queue-panel 用的是正确写法，这里与它对齐。
+    const step = push(state, v);
+    state = step.state;
+    steps.push(step);
     steps.push({ state, description: `入栈 ${v} → 栈顶 = ${v}`, codeLine: 11 });
   }
   while (state.items.length > 0) {

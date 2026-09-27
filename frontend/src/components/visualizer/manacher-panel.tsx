@@ -34,7 +34,7 @@ interface ManacherState {
   message: string;
 }
 
-function buildSteps(s: string): VizStep<ManacherState>[] {
+export function buildSteps(s: string): VizStep<ManacherState>[] {
   const steps: VizStep<ManacherState>[] = [];
   const t = ('#' + s.split('').join('#') + '#').split('');
   const n = t.length;

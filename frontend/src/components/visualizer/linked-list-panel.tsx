@@ -120,7 +120,7 @@ function reverse(state: ListState): ListState {
   return { ...state, nodes, headId: prev, highlightIds: [] };
 }
 
-function buildSteps(seed: number[]): VizStep<ListState>[] {
+export function buildSteps(seed: number[]): VizStep<ListState>[] {
   const steps: VizStep<ListState>[] = [];
   let state = buildState(seed);
   steps.push({ state, description: '初始化链表', codeLine: 3 });
