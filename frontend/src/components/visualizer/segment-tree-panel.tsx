@@ -33,7 +33,7 @@ interface SegState {
   message: string;
 }
 
-function buildSteps(nums: number[], qL: number, qR: number): VizStep<SegState>[] {
+export function buildSteps(nums: number[], qL: number, qR: number): VizStep<SegState>[] {
   const steps: VizStep<SegState>[] = [];
   const n = nums.length;
   const tree = new Array(4 * n).fill(0);

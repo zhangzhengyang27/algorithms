@@ -884,6 +884,228 @@ describe('backtracking-panel', () => {
     expect(new Set(res.map((r) => r.join(','))).size).toBe(res.length);
   });
 });
+
+// ─── 第五批：最短路 / MST / 拓扑 / 区间 DP / 数论 / 线段树 ────────────────────
+
+import { buildSteps as bfBuild } from '@/components/visualizer/bellman-ford-panel';
+import { buildSteps as fwBuild } from '@/components/visualizer/floyd-warshall-panel';
+import { buildSteps as primBuild } from '@/components/visualizer/prim-panel';
+import { buildSteps as kruskalBuild } from '@/components/visualizer/kruskal-panel';
+import { buildSteps as topoBuild } from '@/components/visualizer/topological-sort-panel';
+import { buildSteps as edBuild } from '@/components/visualizer/edit-distance-panel';
+import { buildSteps as upBuild } from '@/components/visualizer/unique-paths-panel';
+import { buildSteps as csumBuild } from '@/components/visualizer/combination-sum-panel';
+import { buildSteps as cpBuild } from '@/components/visualizer/cartesian-product-panel';
+import { buildSteps as combBuild } from '@/components/visualizer/combinations-panel';
+import { buildSteps as exgcdBuild } from '@/components/visualizer/extended-gcd-panel';
+import { buildSteps as segBuild } from '@/components/visualizer/segment-tree-panel';
+
+type WEdge = [number, number, number];
+
+function refMstWeight(n: number, es: WEdge[]): number {
+  const par = Array.from({ length: n }, (_, i) => i);
+  const find = (x: number) => { while (par[x] !== x) x = par[x]; return x; };
+  let total = 0, used = 0;
+  for (const [u, v, w] of [...es].sort((a, b) => a[2] - b[2])) {
+    if (find(u) !== find(v)) { par[find(u)] = find(v); total += w; used++; }
+  }
+  return used === n - 1 ? total : -1;
+}
+
+function refEditDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function refComb(n: number, k: number): number {
+  let r = 1;
+  for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+  return Math.round(r);
+}
+
+const GW: WEdge[] = [[0, 1, 1], [1, 2, 2], [0, 2, 5], [2, 3, 1], [1, 3, 6]];
+const toU = (es: WEdge[]) => es.map(([u, v, w]) => ({ u, v, w }));
+
+function refDijkstraDirected(n: number, es: WEdge[], src: number): number[] {
+  const adj: [number, number][][] = Array.from({ length: n }, () => []);
+  for (const [u, v, w] of es) adj[u].push([v, w]); // 只放正向边
+  const d = Array(n).fill(Infinity);
+  d[src] = 0;
+  const done: boolean[] = Array(n).fill(false);
+  for (let it = 0; it < n; it++) {
+    let u = -1;
+    for (let i = 0; i < n; i++) if (!done[i] && (u === -1 || d[i] < d[u])) u = i;
+    if (u === -1 || d[u] === Infinity) break;
+    done[u] = true;
+    for (const [v, w] of adj[u]) if (d[u] + w < d[v]) d[v] = d[u] + w;
+  }
+  return d;
+}
+
+describe('bellman-ford-panel', () => {
+  // 注意：本面板把边表当**有向图**松弛（只有 u→v），而 floyd-warshall 面板把同一形式的
+  // 边表当**无向图**。两者对「边是否双向」的约定不一致（已记入 §8），故这里必须用有向参照。
+  const cases: [number, WEdge[], number][] = [
+    [4, GW, 0],
+    [3, [[0, 1, 2], [1, 2, 3]], 0],
+    [3, [[0, 1, 2], [1, 2, 3], [0, 2, 10]], 0],
+    [2, [], 0],
+  ];
+  for (const [n, es, src] of cases) {
+    it(`单源最短路 n=${n} src=${src}`, () => {
+      // 参照用 Dijkstra（正权图上完全不同的算法路径），而不是再跑一遍松弛
+      expect(lastState(bfBuild(n, toU(es), src)).dist).toEqual(refDijkstraDirected(n, es, src));
+    });
+  }
+});
+
+describe('floyd-warshall-panel', () => {
+  for (const [n, es] of [[4, GW], [3, [[0, 1, 4], [1, 2, 1]]]] as [number, WEdge[]][]) {
+    it(`所有点对 n=${n}`, () => {
+      const d = lastState(fwBuild(n, es)).dist as number[][];
+      for (let s = 0; s < n; s++) expect(d[s]).toEqual(refDijkstra(n, es, s));
+      for (let i = 0; i < n; i++) {
+        expect(d[i][i]).toBe(0);
+        for (let j = 0; j < n; j++) expect(d[i][j]).toBe(d[j][i]); // 无向图对称
+      }
+    });
+  }
+});
+
+describe('prim / kruskal MST', () => {
+  const graphs: [number, WEdge[]][] = [[4, GW], [4, [[0, 1, 3], [1, 2, 4], [2, 3, 2], [0, 3, 9]]], [2, [[0, 1, 5]]]];
+  for (const [n, es] of graphs) {
+    it(`prim 的 MST 总权重等于独立 Kruskal（n=${n}）`, () => {
+      const s = lastState(primBuild(n, es, 0));
+      expect(s.totalWeight).toBe(refMstWeight(n, es));
+      expect(s.inMST.filter(Boolean)).toHaveLength(n);
+    });
+
+    it(`kruskal 的 MST 总权重与排序序列都正确（n=${n}）`, () => {
+      const s = lastState(kruskalBuild(n, toU(es)));
+      expect(s.totalWeight).toBe(refMstWeight(n, es));
+      const w = (s.sortedEdges as any[]).map((e) => e.w);
+      expect([...w].sort((a, b) => a - b)).toEqual(w); // 确实按权重升序
+    });
+  }
+});
+
+describe('topological-sort-panel', () => {
+  const cases: [number, [number, number][]][] = [
+    [6, [[5, 2], [5, 0], [4, 0], [4, 1], [2, 3], [3, 1]]],
+    [4, [[0, 1], [1, 2], [2, 3]]],
+    [3, []],
+  ];
+  for (const [n, es] of cases) {
+    it(`${n} 点 ${es.length} 边的序确实是拓扑序`, () => {
+      const order = lastState(topoBuild(n, es)).result as number[];
+      expect([...order].sort((a, b) => a - b)).toEqual(Array.from({ length: n }, (_, i) => i));
+      const at = new Map(order.map((v, i) => [v, i]));
+      for (const [u, v] of es) expect(at.get(u)!).toBeLessThan(at.get(v)!);
+    });
+  }
+});
+
+describe('edit-distance-panel', () => {
+  for (const [a, b] of [['horse', 'ros'], ['', 'abc'], ['abc', ''], ['intention', 'execution'], ['same', 'same']]) {
+    it(`编辑距离 "${a}" → "${b}"`, () => {
+      const s = lastState(edBuild(a, b));
+      expect(s.dp[a.length][b.length]).toBe(refEditDistance(a, b));
+    });
+  }
+});
+
+describe('unique-paths-panel', () => {
+  for (const [m, n] of [[3, 7], [1, 1], [1, 5], [5, 1], [7, 3]]) {
+    it(`${m}×${n} 网格路径数等于组合数 C(m+n-2, m-1)`, () => {
+      expect(lastState(upBuild(m, n)).dp[m - 1][n - 1]).toBe(refComb(m + n - 2, m - 1));
+    });
+  }
+});
+
+describe('combination-sum-panel', () => {
+  for (const [cands, target] of [[[2, 3, 6, 7], 7], [[2, 3, 5], 8], [[7], 10]] as [number[], number][]) {
+    it(`candidates=${JSON.stringify(cands)} target=${target}`, () => {
+      const ref: string[] = [];
+      const walk = (start: number, rest: number, path: number[]) => {
+        if (rest === 0) { ref.push([...path].sort((a, b) => a - b).join(',')); return; }
+        for (let i = start; i < cands.length; i++) {
+          if (cands[i] > rest) continue;
+          path.push(cands[i]); walk(i, rest - cands[i], path); path.pop();
+        }
+      };
+      walk(0, target, []);
+      const got = (lastState(csumBuild(cands, target)).results as number[][])
+        .map((r) => r.slice().sort((x, y) => x - y).join(','));
+      expect(new Set(got).size).toBe(got.length); // 无重复组合
+      expect([...got].sort()).toEqual([...new Set(ref)].sort());
+      for (const r of lastState(csumBuild(cands, target)).results as number[][]) {
+        expect(r.reduce((a, v) => a + v, 0)).toBe(target); // 每条都真的凑成 target
+      }
+    });
+  }
+});
+
+describe('cartesian-product / combinations 计数', () => {
+  for (const [A, B] of [[['a', 'b'], ['1', '2']], [['x'], []], [[], ['1']]]) {
+    it(`笛卡尔积 ${JSON.stringify(A)} × ${JSON.stringify(B)}`, () => {
+      const ref: string[] = [];
+      for (const x of A) for (const y of B) ref.push(`${x},${y}`);
+      const got = (lastState(cpBuild(A, B)).results as string[][]).map((p) => p.join(','));
+      expect(got).toEqual(ref);
+    });
+  }
+  // k=0 未纳入：面板对 C(n,0) 返回 0 个组合（数学上应是 1 个空组合）。
+  // 该面板 UI 默认 length=2，0 是否可达未证实，已作为边界问题记入 §8 而不是替它编期望值。
+  for (const [opts, k] of [[['a', 'b', 'c'], 2], [['a', 'b', 'c'], 1], [['a', 'b', 'c', 'd'], 4]] as [string[], number][]) {
+    it(`组合 C(${opts.length},${k}) 的结果集正确`, () => {
+      const ref: string[] = [];
+      const walk = (start: number, path: number[]) => {
+        if (path.length === k) { ref.push(path.map((i) => opts[i]).join(',')); return; }
+        for (let i = start; i < opts.length; i++) walk(i + 1, [...path, i]);
+      };
+      walk(0, []);
+      const got = (lastState(combBuild(opts, k)).results as string[][]).map((c) => c.join(','));
+      expect(got).toHaveLength(refComb(opts.length, k));
+      expect([...got].sort()).toEqual([...ref].sort());
+    });
+  }
+});
+
+describe('extended-gcd-panel', () => {
+  for (const [a, b] of [[30, 12], [12, 30], [7, 5], [0, 4], [100, 75]]) {
+    it(`exgcd(${a}, ${b})：g 是最大公约数且贝祖等式成立`, () => {
+      const g0 = (x: number, y: number): number => (y === 0 ? Math.abs(x) : g0(y, x % y));
+      const top = (lastState(exgcdBuild(a, b)).frames as any[])[0];
+      expect(top.g).toBe(g0(a, b));
+      expect(a * top.x + b * top.y).toBe(top.g); // 贝祖恒等式是 exgcd 的唯一正确性判据
+    });
+  }
+});
+
+describe('segment-tree-panel', () => {
+  for (const [nums, ql, qr] of [[[5, 8, 6, 3, 2, 7], 1, 4], [[1], 0, 0], [[3, 4, 5], 0, 2], [[-2, 0, 3], 0, 1]] as [number[], number, number][]) {
+    it(`区间和 [${ql},${qr}] 等于朴素求和，且 tree 是自洽的求和线段树`, () => {
+      const s = lastState(segBuild(nums, ql, qr));
+      expect(s.queryResult).toBe(nums.slice(ql, qr + 1).reduce((a, b) => a + b, 0));
+      const tree = s.tree as number[];
+      for (let i = 0; i < tree.length; i++) {
+        const l = 2 * i + 1, r = 2 * i + 2;
+        if (r < tree.length && tree[l] !== undefined) {
+          // 内部节点必须等于两子之和（0 表示未使用位，跳过叶子以下）
+          if (tree[l] !== 0 || tree[r] !== 0) expect(tree[i]).toBe(tree[l] + tree[r]);
+        }
+      }
+    });
+  }
+});
 // 栈/队列/链表：从**相邻帧的 state 差分**推出实际弹出序列，不去解析文案，
 // 也不把面板自己的输出抄来当基线。
 describe('stack / queue / linked-list 面板', () => {

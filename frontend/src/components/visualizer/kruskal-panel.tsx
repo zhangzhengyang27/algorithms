@@ -38,7 +38,7 @@ function find(parent: number[], x: number): number {
   return x;
 }
 
-function buildSteps(n: number, edges: Edge[]): VizStep<KruskalState>[] {
+export function buildSteps(n: number, edges: Edge[]): VizStep<KruskalState>[] {
   const steps: VizStep<KruskalState>[] = [];
   const sorted = [...edges].sort((a, b) => a.w - b.w);
   const parent = Array.from({ length: n }, (_, i) => i);

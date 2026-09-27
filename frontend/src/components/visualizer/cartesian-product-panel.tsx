@@ -22,7 +22,7 @@ interface CartesianState {
   message: string;
 }
 
-function buildSteps(A: string[], B: string[]): VizStep<CartesianState>[] {
+export function buildSteps(A: string[], B: string[]): VizStep<CartesianState>[] {
   const steps: VizStep<CartesianState>[] = [];
   const results: [string, string][] = [];
 

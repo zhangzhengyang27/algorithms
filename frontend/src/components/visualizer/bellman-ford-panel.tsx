@@ -34,7 +34,7 @@ interface BFState {
   message: string;
 }
 
-function buildSteps(n: number, edges: BFEdge[], src: number): VizStep<BFState>[] {
+export function buildSteps(n: number, edges: BFEdge[], src: number): VizStep<BFState>[] {
   const steps: VizStep<BFState>[] = [];
   const dist = new Array(n).fill(Infinity);
   dist[src] = 0;

@@ -27,7 +27,7 @@ interface EDState {
   message: string;
 }
 
-function buildSteps(a: string, b: string): VizStep<EDState>[] {
+export function buildSteps(a: string, b: string): VizStep<EDState>[] {
   const steps: VizStep<EDState>[] = [];
   const m = a.length;
   const n = b.length;

@@ -33,7 +33,7 @@ interface ExgcdState {
   message: string;
 }
 
-function buildSteps(a0: number, b0: number): VizStep<ExgcdState>[] {
+export function buildSteps(a0: number, b0: number): VizStep<ExgcdState>[] {
   const steps: VizStep<ExgcdState>[] = [];
   const frames: Frame[] = [];
 

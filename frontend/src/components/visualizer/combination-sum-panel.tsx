@@ -25,7 +25,7 @@ interface CombinationSumState {
   message: string;
 }
 
-function buildSteps(candidates: number[], target: number): VizStep<CombinationSumState>[] {
+export function buildSteps(candidates: number[], target: number): VizStep<CombinationSumState>[] {
   const steps: VizStep<CombinationSumState>[] = [];
   const cur: number[] = [];
   const results: number[][] = [];

@@ -28,7 +28,7 @@ interface PrimState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number, number][], start: number): VizStep<PrimState>[] {
+export function buildSteps(n: number, edges: [number, number, number][], start: number): VizStep<PrimState>[] {
   const steps: VizStep<PrimState>[] = [];
   const adj: [number, number][][] = Array.from({ length: n }, () => []);
   for (const [u, v, w] of edges) {

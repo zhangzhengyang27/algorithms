@@ -32,7 +32,7 @@ interface TopoState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number][]): VizStep<TopoState>[] {
+export function buildSteps(n: number, edges: [number, number][]): VizStep<TopoState>[] {
   const steps: VizStep<TopoState>[] = [];
   const inDegree = new Array(n).fill(0);
   const adj: number[][] = Array.from({ length: n }, () => []);

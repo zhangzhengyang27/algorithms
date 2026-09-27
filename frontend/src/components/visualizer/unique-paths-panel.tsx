@@ -22,7 +22,7 @@ interface UniquePathsState {
   message: string;
 }
 
-function buildSteps(m: number, n: number): VizStep<UniquePathsState>[] {
+export function buildSteps(m: number, n: number): VizStep<UniquePathsState>[] {
   const steps: VizStep<UniquePathsState>[] = [];
   const dp: number[][] = Array(m)
     .fill(null)

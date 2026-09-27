@@ -23,7 +23,7 @@ interface CombinationsState {
   message: string;
 }
 
-function buildSteps(options: string[], length: number): VizStep<CombinationsState>[] {
+export function buildSteps(options: string[], length: number): VizStep<CombinationsState>[] {
   const steps: VizStep<CombinationsState>[] = [];
   const results: string[][] = [];
 

@@ -24,7 +24,7 @@ interface FWState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number, number][]): VizStep<FWState>[] {
+export function buildSteps(n: number, edges: [number, number, number][]): VizStep<FWState>[] {
   const steps: VizStep<FWState>[] = [];
   const dist: number[][] = Array.from({ length: n }, (_, a) =>
     Array.from({ length: n }, (_, b) => (a === b ? 0 : Infinity)),
