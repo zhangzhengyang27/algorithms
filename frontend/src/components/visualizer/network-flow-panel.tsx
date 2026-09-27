@@ -55,7 +55,7 @@ interface NetworkFlowState {
   message: string;
 }
 
-function buildSteps(capInput: number[][]): VizStep<NetworkFlowState>[] {
+export function buildSteps(capInput: number[][]): VizStep<NetworkFlowState>[] {
   const steps: VizStep<NetworkFlowState>[] = [];
   const n = capInput.length;
   const cap = capInput.map((r) => [...r]);

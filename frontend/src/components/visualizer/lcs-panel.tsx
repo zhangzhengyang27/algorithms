@@ -33,7 +33,7 @@ interface LCSState {
   message: string;
 }
 
-function buildSteps(s1: string, s2: string): VizStep<LCSState>[] {
+export function buildSteps(s1: string, s2: string): VizStep<LCSState>[] {
   const steps: VizStep<LCSState>[] = [];
   const m = s1.length;
   const n = s2.length;

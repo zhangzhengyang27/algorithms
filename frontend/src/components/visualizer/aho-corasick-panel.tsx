@@ -64,7 +64,7 @@ interface ACState {
   message: string;
 }
 
-function buildSteps(patterns: string[], text: string): VizStep<ACState>[] {
+export function buildSteps(patterns: string[], text: string): VizStep<ACState>[] {
   const steps: VizStep<ACState>[] = [];
   const nodes: ACNodeData[] = [{ id: 0, ch: '●', next: {}, fail: 0, out: [] }];
   const matches: { pattern: string; end: number }[] = [];

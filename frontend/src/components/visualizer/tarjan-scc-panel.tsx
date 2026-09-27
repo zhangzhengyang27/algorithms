@@ -44,7 +44,7 @@ interface TarjanState {
   message: string;
 }
 
-function buildSteps(n: number, edges: [number, number][]): VizStep<TarjanState>[] {
+export function buildSteps(n: number, edges: [number, number][]): VizStep<TarjanState>[] {
   const steps: VizStep<TarjanState>[] = [];
   const adj: number[][] = Array.from({ length: n }, () => []);
   for (const [u, v] of edges) {

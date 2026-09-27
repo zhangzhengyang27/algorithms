@@ -47,7 +47,7 @@ interface CombState {
   message: string;
 }
 
-function buildSteps(n: number, k: number): VizStep<CombState>[] {
+export function buildSteps(n: number, k: number): VizStep<CombState>[] {
   const steps: VizStep<CombState>[] = [];
   const permNums = [1, 2, 3];
   const tri: number[][] = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(0));

@@ -44,7 +44,7 @@ function clauseName(c: Clause): string {
   return `(${litName(c.a)} ∨ ${litName(c.b)})`;
 }
 
-function buildSteps(n: number, clauses: Clause[]): VizStep<TwoSatState>[] {
+export function buildSteps(n: number, clauses: Clause[]): VizStep<TwoSatState>[] {
   const steps: VizStep<TwoSatState>[] = [];
   const impEdges: ImpEdge[] = [];
   const sccIds = new Array(2 * n).fill(-1);

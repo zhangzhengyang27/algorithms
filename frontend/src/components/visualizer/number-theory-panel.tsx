@@ -53,7 +53,7 @@ interface NTState {
   message: string;
 }
 
-function buildSteps(base: number, exp: number, mod: number, gcdA0: number, gcdB0: number, sieveN: number): VizStep<NTState>[] {
+export function buildSteps(base: number, exp: number, mod: number, gcdA0: number, gcdB0: number, sieveN: number): VizStep<NTState>[] {
   const steps: VizStep<NTState>[] = [];
   if (mod < 1) mod = 1000;
 

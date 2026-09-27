@@ -35,7 +35,7 @@ interface DpTreeState {
   message: string;
 }
 
-function buildSteps(happy: number[], children: number[][]): VizStep<DpTreeState>[] {
+export function buildSteps(happy: number[], children: number[][]): VizStep<DpTreeState>[] {
   const steps: VizStep<DpTreeState>[] = [];
   const dp: [number, number][] = Array.from({ length: happy.length }, () => [0, 0]);
   const order: number[] = [];

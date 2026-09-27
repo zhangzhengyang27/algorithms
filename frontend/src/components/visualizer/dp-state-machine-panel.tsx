@@ -36,7 +36,7 @@ interface SmState {
   message: string;
 }
 
-function buildSteps(prices: number[]): VizStep<SmState>[] {
+export function buildSteps(prices: number[]): VizStep<SmState>[] {
   const steps: VizStep<SmState>[] = [];
   const history: DpRow[] = [];
   let hold = -prices[0], sold = 0, cool = 0;
@@ -110,10 +110,10 @@ export function DpStateMachinePanel() {
   const [pricesText, setPricesText] = useState('1,2,3,0,2');
 
   const prices = useMemo(() => {
-    return pricesText.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0);
+    return pricesText.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n >= 0);
   }, [pricesText]);
 
-  const safePrices = prices.length >= 2 ? prices : [1, 2];
+  const safePrices = prices.length >= 1 ? prices : [1, 2];
   const steps = useMemo(() => buildSteps(safePrices), [safePrices]);
   const initial: SmState = {
     prices: safePrices, day: 0, hold: -safePrices[0], sold: 0, cool: 0,

@@ -1312,7 +1312,7 @@ describe('binary-indexed-tree-panel', () => {
 });
 
 describe('coordinate-compression-panel', () => {
-  for (const original of [[100, 12, 87, 2, 100], [5, 5, 5], [1], []] as number[][]) {
+  for (const original of [[100, 12, 87, 2, 100], [-7, 0, 3, -7, 100], [5, 5, 5], [1], []] as number[][]) {
     it(`离散化 ${JSON.stringify(original)} 等于「去重升序后的下标」`, () => {
       const uniq = [...new Set(original)].sort((a, b) => a - b);
       const s = lastState(coordBuild(original));
@@ -1332,6 +1332,295 @@ describe('string-hashing-panel', () => {
       for (const f of frames) for (const m of (f.matches as number[]) ?? []) reported.add(m);
       for (const p of reported) expect(s.slice(p, p + pat.length)).toBe(pat); // 无假阳性
       expect([...reported].sort((a, b) => a - b)).toEqual(expected);          // 无假阴性
+    });
+  }
+});
+
+// ─── 第七批：DP / 二分答案 / 数论 / 强连通 / 网络流 / AC 自动机 ────────────────
+
+import { buildSteps as lcsBuild } from '@/components/visualizer/lcs-panel';
+import { buildSteps as knapBuild } from '@/components/visualizer/knapsack-panel';
+import { buildSteps as mqBuild } from '@/components/visualizer/monotonic-queue-panel';
+import { buildSteps as bsaBuild } from '@/components/visualizer/binary-search-answer-panel';
+import { buildSteps as ntBuild } from '@/components/visualizer/number-theory-panel';
+import { buildSteps as combBuild2 } from '@/components/visualizer/combinatorics-panel';
+import { buildSteps as dsmBuild } from '@/components/visualizer/dp-state-machine-panel';
+import { buildSteps as tarjanBuild } from '@/components/visualizer/tarjan-scc-panel';
+import { buildSteps as flowBuild } from '@/components/visualizer/network-flow-panel';
+import { buildSteps as acBuild } from '@/components/visualizer/aho-corasick-panel';
+import { buildSteps as treeDpBuild } from '@/components/visualizer/dp-tree-panel';
+import { buildSteps as twoSatBuild } from '@/components/visualizer/two-sat-panel';
+
+function refLcs(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function refKnapsack(items: { weight: number; value: number }[], W: number): number {
+  const dp = Array(W + 1).fill(0);
+  for (const it of items) for (let w = W; w >= it.weight; w--) dp[w] = Math.max(dp[w], dp[w - it.weight] + it.value);
+  return dp[W];
+}
+
+function refWindowMax(nums: number[], k: number): number[] {
+  const out: number[] = [];
+  for (let i = 0; i + k <= nums.length; i++) out.push(Math.max(...nums.slice(i, i + k)));
+  return out;
+}
+
+// LC 2226：最大化段长 L，使 Σ⌊w/L⌋ ≥ k。暴力从大到小扫，不依赖二分。
+function refMaxSegmentLen(woods: number[], k: number): number {
+  for (let L = Math.max(...woods, 0); L >= 1; L--) {
+    if (woods.reduce((s, w) => s + Math.floor(w / L), 0) >= k) return L;
+  }
+  return 0;
+}
+
+function refPowMod(base: number, exp: number, mod: number): number {
+  if (mod === 1) return 0;
+  let r = 1 % mod;
+  for (let i = 0; i < exp; i++) r = (r * base) % mod;
+  return r;
+}
+
+function refGcd(a: number, b: number): number { return b === 0 ? Math.abs(a) : refGcd(b, a % b); }
+
+function refPrimesUpTo(n: number): number[] {
+  const out: number[] = [];
+  for (let x = 2; x <= n; x++) {
+    let prime = true;
+    for (let d = 2; d * d <= x; d++) if (x % d === 0) { prime = false; break; }
+    if (prime) out.push(x);
+  }
+  return out;
+}
+
+function refCooldown(prices: number[]): number {
+  if (!prices.length) return 0;
+  let hold = -prices[0], sold = 0, cool = 0;
+  for (let i = 1; i < prices.length; i++) {
+    const pHold = Math.max(hold, cool - prices[i]);
+    const pSold = Math.max(sold, hold + prices[i]);
+    cool = Math.max(cool, sold);
+    hold = pHold; sold = pSold;
+  }
+  return Math.max(sold, cool);
+}
+
+function refEdmondsKarp(cap: number[][]): number {
+  const n = cap.length;
+  const r = cap.map((row) => [...row]);
+  let flow = 0;
+  for (;;) {
+    const par = Array(n).fill(-1); par[0] = -2;
+    const q = [0];
+    while (q.length && par[n - 1] === -1) {
+      const u = q.shift()!;
+      for (let v = 0; v < n; v++) if (par[v] === -1 && r[u][v] > 0) { par[v] = u; q.push(v); }
+    }
+    if (par[n - 1] === -1) break;
+    let bottleneck = Infinity;
+    for (let v = n - 1; v !== 0; v = par[v]) bottleneck = Math.min(bottleneck, r[par[v]][v]);
+    for (let v = n - 1; v !== 0; v = par[v]) { r[par[v]][v] -= bottleneck; r[v][par[v]] += bottleneck; }
+    flow += bottleneck;
+  }
+  return flow;
+}
+
+function refTreeDp(happy: number[], children: number[][]): number {
+  const walk = (u: number): [number, number] => {
+    let rob = happy[u], skip = 0;
+    for (const c of children[u] ?? []) {
+      const [cRob, cSkip] = walk(c);
+      rob += cSkip; skip += Math.max(cRob, cSkip);
+    }
+    return [rob, skip];
+  };
+  const [a, b] = walk(0);
+  return Math.max(a, b);
+}
+
+describe('lcs-panel', () => {
+  for (const [a, b] of [['ABCBDAB', 'BDCABA'], ['', 'abc'], ['abc', ''], ['abc', 'abc'], ['abcde', 'ace']]) {
+    it(`LCS "${a}" / "${b}"`, () => {
+      const dp = lastState(lcsBuild(a, b)).dp as number[][];
+      expect(dp[a.length][b.length]).toBe(refLcs(a, b));
+    });
+  }
+});
+
+describe('knapsack-panel', () => {
+  const cases: [{ weight: number; value: number }[], number][] = [
+    [[{ weight: 2, value: 3 }, { weight: 1, value: 2 }, { weight: 3, value: 4 }], 4],
+    [[{ weight: 1, value: 15 }, { weight: 3, value: 20 }, { weight: 4, value: 30 }, { weight: 5, value: 40 }], 6],
+    [[{ weight: 5, value: 10 }], 3],
+  ];
+  for (const [items, W] of cases) {
+    it(`容量 ${W} 的最大价值`, () => {
+      const dp = lastState(knapBuild(items, W)).dp as number[][];
+      expect(dp[dp.length - 1][W]).toBe(refKnapsack(items, W));
+    });
+  }
+});
+
+describe('monotonic-queue-panel', () => {
+  for (const [nums, k] of [[[1, 3, -1, -3, 5, 3, 6, 7], 3], [[1], 1], [[9, 8, 7], 2]] as [number[], number][]) {
+    it(`窗口 ${k} 的最大值序列 ${JSON.stringify(nums)}`, () => {
+      expect(lastState(mqBuild(nums, k)).results).toEqual(refWindowMax(nums, k));
+    });
+  }
+});
+
+describe('binary-search-answer-panel（LC 2226 最大化段长）', () => {
+  for (const [woods, k] of [[[3, 6, 7, 11], 8], [[5, 2, 3], 4], [[1, 1, 1], 3]] as [number[], number][]) {
+    it(`woods=${JSON.stringify(woods)} k=${k} 的答案等于暴力扫描`, () => {
+      expect(lastState(bsaBuild(woods, k)).answer).toBe(refMaxSegmentLen(woods, k));
+    });
+  }
+});
+
+describe('number-theory-panel', () => {
+  for (const [base, exp, mod, ga, gb, sieveN] of [
+    [2, 10, 1000, 12, 8, 20],
+    [3, 0, 7, 84, 36, 30],
+    [7, 13, 97, 17, 5, 2],
+    [5, 6, 1, 0, 9, 1],
+  ] as number[][]) {
+    it(`快速幂 / 欧几里得 / 筛法三块都与独立实现一致（${base}^${exp} mod ${mod}, gcd(${ga},${gb}), π(${sieveN})）`, () => {
+      const s = lastState(ntBuild(base, exp, mod, ga, gb, sieveN));
+      expect(s.powResult).toBe(refPowMod(base, exp, mod));
+      expect(s.gcdResult).toBe(refGcd(ga, gb));
+      const primes = s.sievePrimes as number[];
+      expect(primes).toEqual(refPrimesUpTo(sieveN));
+      // sieveIsPrime 必须和筛出的素数表自洽
+      const flagged = s.sieveIsPrime.map((x: boolean, i: number) => (x && i >= 2 ? i : -1)).filter((i: number) => i >= 0);
+      expect(flagged).toEqual(primes);
+    });
+  }
+});
+
+describe('combinatorics-panel', () => {
+  for (const [n, k] of [[5, 2], [6, 0], [4, 4], [10, 3]] as [number, number][]) {
+    it(`C(${n},${k})`, () => {
+      const s = lastState(combBuild2(n, k));
+      expect(s.queryResult ?? s.combResult).toBe(refComb(n, k));
+    });
+  }
+});
+
+describe('dp-state-machine-panel（含冷冻期，LC 309）', () => {
+  for (const prices of [[1, 2, 3, 0, 2], [1], [], [3, 2, 1, 0, 2]]) {
+    it(`最大利润 ${JSON.stringify(prices)}`, () => {
+      const s = lastState(dsmBuild(prices));
+      expect(s.answer).toBe(refCooldown(prices));
+    });
+  }
+});
+
+describe('tarjan-scc-panel', () => {
+  const n = 5;
+  const edges: [number, number][] = [[1, 0], [2, 1], [3, 2], [4, 3], [2, 4], [0, 4]];
+  it('SCC 分组等于按可达性独立算出的强连通划分', () => {
+    const reach: boolean[][] = Array.from({ length: n }, () => Array(n).fill(false));
+    for (const [u, v] of edges) reach[u][v] = true;
+    for (let k = 0; k < n; k++) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      if (reach[i][k] && reach[k][j]) reach[i][j] = true;
+    }
+    const groups: number[][] = lastState(tarjanBuild(n, edges)).sccs as number[][];
+    // 划分合法：不重不漏
+    const flat = groups.flat();
+    expect([...flat].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4]);
+    // 每组内部两两互达；跨组不互达
+    for (const g of groups) {
+      for (const a of g) for (const b of g) expect(reach[a][b]).toBe(true);
+    }
+    for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        for (const a of groups[i]) for (const b of groups[j]) {
+          expect(reach[a][b] && reach[b][a]).toBe(false);
+        }
+      }
+    }
+  });
+});
+
+describe('network-flow-panel', () => {
+  for (const cap of [
+    [[0, 10, 10, 0], [0, 0, 2, 4], [0, 0, 0, 8], [0, 0, 0, 0]],
+    [[0, 3, 2, 0], [0, 0, 0, 2], [0, 0, 0, 4], [0, 0, 0, 0]],
+    // 三条增广路会复用 0→1 这条边：瓶颈必须按「容量-已有流量」算，否则被高估成 6
+    [[0, 3, 2, 0], [0, 0, 2, 2], [0, 0, 0, 3], [0, 0, 0, 0]],
+  ] as number[][][]) {
+    it(`最大流 = 独立 Edmonds-Karp（源 0 汇 ${cap.length - 1}）`, () => {
+      expect(lastState(flowBuild(cap)).maxFlow).toBe(refEdmondsKarp(cap));
+    });
+  }
+});
+
+describe('aho-corasick-panel', () => {
+  it('匹配到的 (模式, 结束位置) 集合等于暴力多模式查找', () => {
+    const patterns = ['he', 'she', 'his', 'hers'];
+    const text = 'ushers';
+    const expected = new Set<string>();
+    for (const p of patterns) {
+      for (let i = 0; i + p.length <= text.length; i++) {
+        if (text.slice(i, i + p.length) === p) expected.add(`${p}@${i + p.length - 1}`);
+      }
+    }
+    const got = new Set<string>(
+      (lastState(acBuild(patterns, text)).matches as { pattern: string; end: number }[])
+        .map((m) => `${m.pattern}@${m.end}`),
+    );
+    expect([...got].sort()).toEqual([...expected].sort());
+  });
+});
+
+describe('dp-tree-panel（树形 DP 最大独立集）', () => {
+  const cases: [number[], number[][]][] = [
+    [[1, 5, 2, 3], [[1, 2], [3], [], []]],
+    [[3], [[]]],
+    [[1, 2, 3, 4, 5, 6], [[1, 2], [3, 4], [5], [], [], []]],
+  ];
+  for (const [happy, children] of cases) {
+    it(`最大快乐值 ${JSON.stringify(happy)}`, () => {
+      const s = lastState(treeDpBuild(happy, children));
+      expect(s.result).toBe(refTreeDp(happy, children));
+    });
+  }
+});
+
+describe('two-sat-panel', () => {
+  type Cl = { a: number; b: number };
+  // 测试用例用带符号字面量书写（+1 = x0，-1 = ¬x0），面板的编码是节点号：2i = x_i、2i+1 = ¬x_i
+  const node = (lit: number) => (lit > 0 ? 2 * (lit - 1) : 2 * (-lit - 1) + 1);
+  const cases: [number, [number, number][]][] = [
+    [2, [[1, 2], [-1, 2], [1, -2]]], // 面板自带的 SAT 示例
+    [1, [[1, 1], [-1, -1]]], // 面板自带的 UNSAT 示例
+    [2, [[1, 2], [1, -2], [-1, 2], [-1, -2]]], // 四个子句：UNSAT
+    [1, [[-1, -1]]], // 单子句：必须 x0 = false
+    [3, [[1, 2], [-2, 3], [-3, -1], [2, -3]]], // 蕴含链较长的一例
+  ];
+  for (const [n, raw] of cases) {
+    const clauses: Cl[] = raw.map(([a, b]) => ({ a: node(a), b: node(b) }));
+    it(`n=${n} ${JSON.stringify(raw)} 的可满足性判定与 brute force 一致`, () => {
+      const lit = (l: number, assign: boolean[]) => (l > 0 ? assign[l - 1] : !assign[-l - 1]);
+      let sat = false;
+      for (let mask = 0; mask < (1 << n); mask++) {
+        const assign = Array.from({ length: n }, (_, i) => ((mask >> i) & 1) === 1);
+        if (raw.every((c) => lit(c[0], assign) || lit(c[1], assign))) { sat = true; break; }
+      }
+      const s = lastState(twoSatBuild(n, clauses));
+      expect(!!s.sat).toBe(sat);
+      if (sat) {
+        // 面板若判定可满足，它给出的赋值必须真的满足所有子句
+        expect(Array.isArray(s.assignment) && s.assignment.every((v: boolean | null) => v !== null)).toBe(true);
+        expect(raw.every((c) => lit(c[0], s.assignment) || lit(c[1], s.assignment))).toBe(true);
+      }
     });
   }
 });

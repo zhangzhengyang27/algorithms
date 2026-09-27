@@ -104,7 +104,7 @@ export function CoordinateCompressionPanel() {
   const [coordsText, setCoordsText] = useState('999999,5,1000000,5,42');
 
   const coords = useMemo(() => {
-    return coordsText.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0);
+    return coordsText.split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n));
   }, [coordsText]);
 
   const steps = useMemo(() => buildSteps(coords), [coords]);

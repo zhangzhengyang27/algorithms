@@ -28,7 +28,7 @@ interface MQState {
   message: string;
 }
 
-function buildSteps(nums: number[], k: number): VizStep<MQState>[] {
+export function buildSteps(nums: number[], k: number): VizStep<MQState>[] {
   const steps: VizStep<MQState>[] = [];
   const deque: number[] = [];
   const results: number[] = [];

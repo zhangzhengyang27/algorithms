@@ -30,7 +30,7 @@ interface KnapsackState {
   message: string;
 }
 
-function buildSteps(items: KnapsackItem[], capacity: number): VizStep<KnapsackState>[] {
+export function buildSteps(items: KnapsackItem[], capacity: number): VizStep<KnapsackState>[] {
   const steps: VizStep<KnapsackState>[] = [];
   const n = items.length;
   const dp: number[][] = Array(n + 1)

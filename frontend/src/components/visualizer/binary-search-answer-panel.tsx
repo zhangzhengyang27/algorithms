@@ -32,7 +32,7 @@ interface BsaState {
   message: string;
 }
 
-function buildSteps(woods: number[], k: number): VizStep<BsaState>[] {
+export function buildSteps(woods: number[], k: number): VizStep<BsaState>[] {
   const steps: VizStep<BsaState>[] = [];
   const maxLen = Math.max(...woods);
 
