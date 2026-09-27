@@ -36,6 +36,16 @@ interface BFState {
 
 export function buildSteps(n: number, edges: BFEdge[], src: number): VizStep<BFState>[] {
   const steps: VizStep<BFState>[] = [];
+  // 与 floyd-warshall / prim / kruskal 对齐：本面板的边表表示**无向**图。
+  // 以前只按 u→v 单向松弛，导致同一份边表在这里和那几个面板得出不同的距离
+  // （源点没有出边时就整片 ∞）。这里把每条边展开成两个方向，松弛过程与展示
+  // 的边表都保持一致。
+  const undirected: BFEdge[] = [];
+  for (const e of edges) {
+    undirected.push(e);
+    if (e.u !== e.v) undirected.push({ u: e.v, v: e.u, w: e.w });
+  }
+  edges = undirected;
   const dist = new Array(n).fill(Infinity);
   dist[src] = 0;
 

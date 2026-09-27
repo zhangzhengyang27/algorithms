@@ -144,6 +144,17 @@ describe.each(stackImpls)('%s 契约', (_name, make) => {
     expect(s.size).toBe(1);
   });
 
+  it('toArray 自顶向底，与 pop() 观察顺序一致（两种实现共用同一契约）', () => {
+    const s = make();
+    [1, 2, 3].forEach((v) => s.push(v));
+    expect(s.toArray()).toEqual([3, 2, 1]);
+    s.pop();
+    expect(s.toArray()).toEqual([2, 1]);
+    s.pop();
+    s.pop();
+    expect(s.toArray()).toEqual([]);
+  });
+
   it('空栈 isEmpty 为真，空栈 pop 抛错', () => {
     const s = make();
     expect(s.isEmpty()).toBe(true);
@@ -153,22 +164,6 @@ describe.each(stackImpls)('%s 契约', (_name, make) => {
     s.pop();
     expect(s.isEmpty()).toBe(true);
     expect(() => s.pop()).toThrow();
-  });
-});
-
-// 注意：两个 Stack 实现的 toArray 方向是**相反**的，同一条 Stack<T> 接口下并不等价。
-// 这里按当前实际行为分别锁定；若将来统一方向，本组用例会失败并强制你确认调用方。
-describe('Stack.toArray 方向（已知不一致）', () => {
-  it('ArrayStack：自底向顶', () => {
-    const s = new ArrayStack<number>();
-    [1, 2, 3].forEach((v) => s.push(v));
-    expect(s.toArray()).toEqual([1, 2, 3]);
-  });
-
-  it('LinkedListStack：自顶向底', () => {
-    const s = new LinkedListStack<number>();
-    [1, 2, 3].forEach((v) => s.push(v));
-    expect(s.toArray()).toEqual([3, 2, 1]);
   });
 });
 
@@ -519,62 +514,86 @@ describe.each([
   });
 });
 
-// 键类型用 number：BSTMap 未传比较器时默认做数值相减，字符串键会得到 NaN，
-// 导致所有查找静默失配（详见 PROJECT_MAP.md §8 的已知缺陷条目）。
+// 键同时覆盖 number 与 string：默认比较器已收敛为「数值走减法、其余走字符串序」，
+// 原先写死 a - b 时字符串键会得到 NaN 从而所有查找恒未命中（§8 第 19 项）。
 describe.each([
-  ['BSTMap', () => new BSTMap<number, string>()],
-  ['LinkedListMap', () => new LinkedListMap<number, string>()],
-])('%s 契约', (_name, make) => {
+  ['BSTMap<number>', () => new BSTMap<number, string>(), 1, 2, 99] as const,
+  ['LinkedListMap<number>', () => new LinkedListMap<number, string>(), 1, 2, 99] as const,
+  ['BSTMap<string>', () => new BSTMap<string, string>(), 'apple', 'banana', 'cherry'] as const,
+  ['LinkedListMap<string>', () => new LinkedListMap<string, string>(), 'apple', 'banana', 'cherry'] as const,
+])('%s 契约', (_name, make, kA, kB, kMissing) => {
+  type Num = { add(k: string | number, v: string): void; get(k: string | number): string | undefined;
+    contains(k: string | number): boolean; remove(k: string | number): string | undefined;
+    set(k: string | number, v: string): void; size: number; isEmpty(): boolean };
+  const open = (): Num => make() as unknown as Num;
+
   it('add / get / contains / remove', () => {
-    const m = make();
-    m.add(1, 'a');
-    m.add(2, 'b');
+    const m = open();
+    m.add(kA, 'a');
+    m.add(kB, 'b');
     expect(m.size).toBe(2);
-    expect(m.get(1)).toBe('a');
-    m.add(1, 'z'); // 已存在则更新而非追加
-    expect(m.get(1)).toBe('z');
+    expect(m.get(kA)).toBe('a');
+    m.add(kA, 'z'); // 已存在则更新而非追加
+    expect(m.get(kA)).toBe('z');
     expect(m.size).toBe(2);
-    expect(m.contains(2)).toBe(true);
-    expect(m.remove(1)).toBe('z');
-    expect(m.contains(1)).toBe(false);
-    expect(m.get(99)).toBeUndefined();
-    expect(m.remove(99)).toBeUndefined();
+    expect(m.contains(kB)).toBe(true);
+    expect(m.remove(kA)).toBe('z');
+    expect(m.contains(kA)).toBe(false);
+    expect(m.get(kMissing)).toBeUndefined();
+    expect(m.remove(kMissing)).toBeUndefined();
     expect(m.size).toBe(1);
   });
 
+  it('同名键更新不产生第二条（字符串键曾在此静默失效）', () => {
+    const m = open();
+    m.add(kA, '1');
+    m.add(kA, '3');
+    expect(m.size).toBe(1);
+    expect(m.get(kA)).toBe('3');
+  });
+
   it('set 只更新已存在的键，缺失键抛错（两种实现一致）', () => {
-    const m = make();
-    m.add(7, 'x');
-    m.set(7, 'y');
-    expect(m.get(7)).toBe('y');
-    expect(() => m.set(8, 'nope')).toThrow();
+    const m = open();
+    m.add(kA, 'x');
+    m.set(kA, 'y');
+    expect(m.get(kA)).toBe('y');
+    expect(() => m.set(kMissing, 'nope')).toThrow();
   });
 
   it('空 map 与全部删除', () => {
-    const m = make();
+    const m = open();
     expect(m.isEmpty()).toBe(true);
-    m.add(1, 'a');
-    m.remove(1);
+    m.add(kA, 'a');
+    m.remove(kA);
     expect(m.isEmpty()).toBe(true);
     expect(m.size).toBe(0);
   });
 });
 
 describe.each([
-  ['BSTSet', () => new BSTSet<number>()],
-  ['LinkedListSet', () => new LinkedListSet<number>()],
-])('%s 契约', (_name, make) => {
+  ['BSTSet', () => new BSTSet<number>(), 1, 2, 9] as const,
+  ['LinkedListSet', () => new LinkedListSet<number>(), 1, 2, 9] as const,
+  ['BSTSet<string>', () => new BSTSet<string>(), 'a', 'b', 'zz'] as [string, () => BSTSet<string> | LinkedListSet<string>, string, string, string],
+])('%s 契约', (_name, make, vA, vB, vMissing) => {
   it('去重语义', () => {
     const s = make();
-    [1, 2, 2, 3, 3, 3].forEach((v) => s.add(v));
-    expect(s.size).toBe(3);
-    expect(s.contains(2)).toBe(true);
-    expect(s.contains(9)).toBe(false);
-    s.remove(2);
-    expect(s.contains(2)).toBe(false);
+    ([vA, vB, vB, vA, vA] as (number | string)[]).forEach((v) => s.add(v as never));
     expect(s.size).toBe(2);
-    s.remove(2);
-    expect(s.size).toBe(2);
+    expect(s.contains(vB as never)).toBe(true);
+    expect(s.contains(vMissing as never)).toBe(false);
+    s.remove(vB as never);
+    expect(s.contains(vB as never)).toBe(false);
+    expect(s.size).toBe(1);
+    s.remove(vB as never);
+    expect(s.size).toBe(1);
+  });
+
+  it('字符串集合可正常增删（曾受默认比较器影响）', () => {
+    const s = make();
+    s.add('solo' as never);
+    s.add('solo' as never);
+    expect(s.size).toBe(1);
+    expect(s.contains('solo' as never)).toBe(true);
   });
 });
 

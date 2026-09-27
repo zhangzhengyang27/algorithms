@@ -41,12 +41,17 @@ export class ArrayStack<T> implements Stack<T> {
     return this.data.get(this.data.size - 1);
   }
 
+  /**
+   * 自顶向底返回，与 pop() 的观察顺序一致，也与 LinkedListStack 对齐。
+   * 之前这里返回的是 DynamicArray 的自底向顶顺序，导致同一个 Stack<T> 接口的两个
+   * 实现给出相反方向（见 PROJECT_MAP.md §8 第 18 项）。
+   */
   toArray(): T[] {
-    return this.data.toArray();
+    return this.data.toArray().reverse();
   }
 
   toString(): string {
-    return `Stack: [${this.data.toArray().join(', ')}] top`;
+    return `Stack: top -> [${this.toArray().join(', ')}]`;
   }
 }
 

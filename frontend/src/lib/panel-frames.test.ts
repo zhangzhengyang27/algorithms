@@ -933,37 +933,29 @@ function refComb(n: number, k: number): number {
 const GW: WEdge[] = [[0, 1, 1], [1, 2, 2], [0, 2, 5], [2, 3, 1], [1, 3, 6]];
 const toU = (es: WEdge[]) => es.map(([u, v, w]) => ({ u, v, w }));
 
-function refDijkstraDirected(n: number, es: WEdge[], src: number): number[] {
-  const adj: [number, number][][] = Array.from({ length: n }, () => []);
-  for (const [u, v, w] of es) adj[u].push([v, w]); // 只放正向边
-  const d = Array(n).fill(Infinity);
-  d[src] = 0;
-  const done: boolean[] = Array(n).fill(false);
-  for (let it = 0; it < n; it++) {
-    let u = -1;
-    for (let i = 0; i < n; i++) if (!done[i] && (u === -1 || d[i] < d[u])) u = i;
-    if (u === -1 || d[u] === Infinity) break;
-    done[u] = true;
-    for (const [v, w] of adj[u]) if (d[u] + w < d[v]) d[v] = d[u] + w;
-  }
-  return d;
-}
-
 describe('bellman-ford-panel', () => {
-  // 注意：本面板把边表当**有向图**松弛（只有 u→v），而 floyd-warshall 面板把同一形式的
-  // 边表当**无向图**。两者对「边是否双向」的约定不一致（已记入 §8），故这里必须用有向参照。
+  // 该面板已与 floyd-warshall / prim / kruskal 对齐：边表表示**无向**图
+  // （内部把每条边展开成两个方向）。四个图面板对同一份边表必须给出一致的距离。
   const cases: [number, WEdge[], number][] = [
     [4, GW, 0],
+    [4, GW, 3],
     [3, [[0, 1, 2], [1, 2, 3]], 0],
-    [3, [[0, 1, 2], [1, 2, 3], [0, 2, 10]], 0],
     [2, [], 0],
+    [5, [[0, 1, 4], [0, 2, 1], [1, 3, 1], [2, 1, 2], [2, 3, 5], [3, 4, 3]], 0],
   ];
   for (const [n, es, src] of cases) {
     it(`单源最短路 n=${n} src=${src}`, () => {
       // 参照用 Dijkstra（正权图上完全不同的算法路径），而不是再跑一遍松弛
-      expect(lastState(bfBuild(n, toU(es), src)).dist).toEqual(refDijkstraDirected(n, es, src));
+      expect(lastState(bfBuild(n, toU(es), src)).dist).toEqual(refDijkstra(n, es, src));
     });
   }
+
+  // 改成无向之后新增的能力：源点没有任何出边时也应当能到达其余点。
+  // 有向实现下这里会是 [Infinity, Infinity, 0]。
+  it('源点无出边时仍可到达其余点', () => {
+    const es: WEdge[] = [[0, 1, 2], [1, 2, 3]];
+    expect(lastState(bfBuild(3, toU(es), 2)).dist).toEqual([5, 3, 0]);
+  });
 });
 
 describe('floyd-warshall-panel', () => {

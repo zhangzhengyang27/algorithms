@@ -17,6 +17,19 @@ export interface Map<K, V> {
   set(key: K, value: V): void;
 }
 
+/**
+ * 通用默认比较器：数值走减法，其余走字符串序。
+ * 原先各容器不传比较器时一律写死 `(a, b) => a - b`，于是字符串键会得到 NaN，
+ * 而 `NaN === 0` 恒假 → 所有查找恒未命中、add 不断追加同名键。
+ * 注意 bst.ts / heap.ts 里还有同样的数值默认值，尚未一并收敛。
+ */
+export function defaultCompare<K>(a: K, b: K): number {
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  const x = String(a);
+  const y = String(b);
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
 /** 基于 BST 的映射（键需要可比较） */
 export class BSTMap<K, V> implements Map<K, V> {
   private keys: K[] = [];
@@ -24,7 +37,7 @@ export class BSTMap<K, V> implements Map<K, V> {
   private compareFn: (a: K, b: K) => number;
 
   constructor(compareFn?: (a: K, b: K) => number) {
-    this.compareFn = compareFn ?? ((a, b) => (a as unknown as number) - (b as unknown as number));
+    this.compareFn = compareFn ?? defaultCompare;
   }
 
   get size(): number {
@@ -131,7 +144,7 @@ export class BSTSet<T> implements Set<T> {
   private bst: BST<T>;
 
   constructor(compareFn?: (a: T, b: T) => number) {
-    this.bst = new BST<T>(compareFn);
+    this.bst = new BST<T>(compareFn ?? defaultCompare);
   }
 
   get size(): number {
