@@ -97,13 +97,7 @@ export async function listTutorialSlugs(): Promise<string[]> {
   return slugs.sort();
 }
 
-interface RenderOptions {
-  slug: string;
-  /** 来自 URL ?category= 的受限分类（可选） */
-  scopedCategory?: string | null;
-}
-
-export async function renderTutorialPage({ slug, scopedCategory }: RenderOptions) {
+export async function renderTutorialPage({ slug }: { slug: string }) {
   const { content, title, category } = await loadTutorial(slug);
 
   // 侧边栏数据：动态扫描所有 .md，避免 TUTORIAL_LIST 漏列
@@ -115,7 +109,7 @@ export async function renderTutorialPage({ slug, scopedCategory }: RenderOptions
   return (
     <div className="px-4 md:px-8 lg:px-10 xl:pl-[150px] xl:pr-[150px] py-10">
       <div className="flex gap-8 items-start">
-        {/* 左侧教程目录 */}
+        {/* 左侧教程目录：全部分类与链接都进预渲染 HTML */}
         <TutorialSidebar groups={sidebarGroups} />
 
         {/* 主内容区 */}
@@ -139,7 +133,7 @@ export async function renderTutorialPage({ slug, scopedCategory }: RenderOptions
                 problems={tutorialResources[slug]?.problems ?? []}
               />
 
-              <TutorialPager slug={slug} scopedCategory={scopedCategory} />
+              <TutorialPager slug={slug} />
             </TutorialTabs>
           </Suspense>
         </div>

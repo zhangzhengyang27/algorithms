@@ -1,4 +1,7 @@
+'use client';
+
 import Link from "next/link";
+import { useUrlSearchParam } from "@/lib/use-url-search-param";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { TUTORIAL_LIST } from "@/lib/tutorial-list";
 
@@ -7,13 +10,11 @@ import { TUTORIAL_LIST } from "@/lib/tutorial-list";
  * - 默认：基于 TUTORIAL_LIST 的全局学习路径线性推进。
  * - scopedCategory 传入时：仅在当前分类内部推进，并携带 ?category= 保持受限上下文。
  */
-export function TutorialPager({
-  slug,
-  scopedCategory,
-}: {
-  slug: string;
-  scopedCategory?: string | null;
-}) {
+export function TutorialPager({ slug }: { slug: string }) {
+  // ?category= 由组件自己在客户端读取：这样教程页不必 await searchParams，
+  // 路由能回到构建期预渲染（未知 slug 也才可能在路由层给出真正的 404）。
+  // 与侧栏同理：默认按全序列出，?category= 由客户端补齐，翻页链接才会在 HTML 里
+  const scopedCategory = useUrlSearchParam('category');
   // 受限模式：只在当前分类子集内推进
   const scopedList =
     scopedCategory && scopedCategory !== ""

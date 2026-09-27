@@ -57,7 +57,11 @@ cd backend
 cp ../.env.example .env        # 然后填入真实 DATABASE_URL / JWT_SECRET
 pnpm run prisma:generate
 pnpm run prisma:migrate        # = prisma migrate deploy（应用已提交的迁移）
-pnpm run prisma:seed
+pnpm run prisma:seed           # 建 demo/admin 用户 + 3 分类 + 1 道题
+# 题库的真实数据在下面三个脚本里，只跑 prisma:seed 的话「题库」几乎是空的：
+npx ts-node prisma/sync-problems.ts        # 17 题：覆盖前端 17 个静态题目路由
+npx ts-node prisma/seed-problems-extra.ts  # 再补 161 题 → 共 178
+npx ts-node prisma/tag-problems.ts         # 题目标签（/problems/tags 与标签筛选靠它）
 ```
 
 > 🔒 迁移脚本已提供安全映射：`pnpm run prisma:migrate` = `prisma migrate deploy`、`prisma:status` = `prisma migrate status`、`prisma:push` = `prisma db push`（改 schema 用后者）。

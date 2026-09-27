@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, Suspense, useRef, type ReactNode } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useUrlSearchParam, notifyUrlChange } from "@/lib/use-url-search-param";
 import Link from "next/link";
 import { BookOpen, BarChart3, ExternalLink, Loader2 } from "lucide-react";
 import { visualizerRegistry } from "@/lib/visualizer-registry";
@@ -19,23 +20,25 @@ export function TutorialTabs({ slug, children }: { slug: string; children: React
   const Panel = vizRoute ? visualizerRegistry[vizRoute] : null;
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const tab = searchParams.get("view") === "visualizer" ? "visualizer" : "lecture";
+  // ?view= 只在浏览器里读：服务端/预渲染一律输出「讲解」正文，
+  // 否则整篇文档会被 Suspense 兜到客户端，HTML 里就什么都不剩了。
+  const tab = useUrlSearchParam("view") === "visualizer" ? ("visualizer" as const) : ("lecture" as const);
 
-  const setTab = useCallback(
+  const goTab = useCallback(
     (next: "lecture" | "visualizer") => {
       if (next === tab) return;
       // 切换时滚动到 tab 容器顶部，避免停留在长文底部造成视觉突兀
       containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       if (next === "lecture") params.delete("view");
       else params.set("view", "visualizer");
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      notifyUrlChange(); // replaceState 不发 popstate，改完 URL 主动通知一次
     },
-    [tab, searchParams, pathname, router],
+    [tab, pathname, router],
   );
 
   if (!Panel) {
@@ -46,12 +49,12 @@ export function TutorialTabs({ slug, children }: { slug: string; children: React
     <div ref={containerRef}>
       {/* Tab 切换器 */}
       <div className="mb-8 inline-flex items-center gap-1 p-1 bg-surface border border-edge rounded-lg">
-        <TabButton active={tab === "lecture"} onClick={() => setTab("lecture")} icon={<BookOpen size={14} />}>
+        <TabButton active={tab === "lecture"} onClick={() => goTab("lecture")} icon={<BookOpen size={14} />}>
           讲解
         </TabButton>
         <TabButton
           active={tab === "visualizer"}
-          onClick={() => setTab("visualizer")}
+          onClick={() => goTab("visualizer")}
           icon={<BarChart3 size={14} />}
         >
           可视化

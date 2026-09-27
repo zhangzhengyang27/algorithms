@@ -2,15 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useUrlSearchParam } from '@/lib/use-url-search-param';
 import { ChevronRight, BookOpen, X, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import type { SidebarGroup } from '@/lib/tutorial-list';
 
 export function TutorialSidebar({ groups }: { groups: SidebarGroup[] }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const scopedCategory = searchParams.get('category')?.trim() || null;
+  // ?category= 只在浏览器里读，保证 137 条目录链接留在预渲染的 HTML 里
+  const scopedCategory = useUrlSearchParam('category');
   const currentSlug = pathname.replace('/tutorials/', '').split('?')[0];
   // 当前 active 所在分类（路由变化时始终重新计算，强制该分类展开）
   const activeCategory =
