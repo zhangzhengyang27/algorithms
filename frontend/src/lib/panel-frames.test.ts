@@ -2772,3 +2772,87 @@ describe('memoization-panel（递归树构建）', () => {
     });
   }
 });
+
+// ===== 第九批补：提参后新增的「数值进 state」与「输入校验帧」四项 =====
+describe('divide-and-conquer-panel（区间累计逆序对已进 state）', () => {
+  for (const input of [[5, 2, 8, 1, 9, 3, 7, 4], [2, 4, 1, 3, 5], [5, 4, 3, 2, 1], [1], []]) {
+    it(`每个写回帧的 invTotal 等于原数组该区间的逆序对数（${JSON.stringify(input)}）`, () => {
+      const pristine = [...input];
+      const frames = dcBuild([...input]) as any[];
+      const wb = frames.filter((f) => f.state.phase === 'writeback');
+      if (input.length >= 2) expect(wb.length).toBeGreaterThan(0); // 单元素/空数组走不到合并
+      for (const f of wb) {
+        const { lo, hi, invTotal } = f.state;
+        expect(invTotal).toBe(refInvCount(pristine.slice(lo, hi)));
+      }
+      expect(lastState(frames).totalInv).toBe(refInvCount(pristine));
+    });
+  }
+});
+
+describe('time-complexity-panel（曲线代入值已进 state）', () => {
+  // 期望值只从「曲线的名字」推出，不读面板的 ops 实现
+  const closedForm = (name: string, n: number): number => {
+    if (name === 'O(1)') return 1;
+    if (name === 'O(log n)') return Math.ceil(Math.log2(n));
+    if (name === 'O(n)') return n;
+    if (name === 'O(n log n)') return Math.ceil(n * Math.log2(n));
+    if (name === 'O(n²)') return n * n;
+    if (name === 'O(2ⁿ)') return 2 ** n;
+    throw new Error(`未登记的曲线名：${name}`);
+  };
+  for (const maxN of [8, 16, 32]) {
+    it(`每个代入帧的 curveOps 等于由曲线名推出的闭式（maxN=${maxN}）`, () => {
+      const frames = cxBuild(maxN) as any[];
+      const evals = frames.filter((f) => f.state.activeN !== null);
+      expect(evals.length).toBeGreaterThan(0);
+      for (const f of evals) {
+        const { activeN, curveOps } = f.state;
+        expect(curveOps.length).toBe(6);
+        for (const c of curveOps) expect(c.ops).toBe(closedForm(c.name, activeN));
+      }
+    });
+  }
+});
+
+describe('cdq-divide-conquer-panel（非法输入给明确提示帧）', () => {
+  it('空点集 / a 乱序 / c 越出值域，都给一帧「输入不合法」而不是静默算错', () => {
+    const bad: [any[], number, string][] = [
+      [[], 6, '点集为空'],
+      [[{ a: 3, b: 1, c: 1, id: 0 }, { a: 1, b: 2, c: 2, id: 1 }], 6, '未按升序'],
+      [[{ a: 1, b: 1, c: 9, id: 0 }], 6, '越出值域'],
+    ];
+    for (const [pts, maxC, needle] of bad) {
+      const frames = cdqBuild(pts, maxC) as any[];
+      expect(frames.length).toBe(1);
+      expect(lastState(frames).phase).toBe('done');
+      expect(String(lastState(frames).message)).toContain(needle);
+    }
+  });
+
+  it('合法输入仍然正常出帧（不被校验帧误伤）', () => {
+    const pts = [{ a: 1, b: 2, c: 1, id: 0 }, { a: 2, b: 1, c: 2, id: 1 }];
+    expect((cdqBuild(pts, 2) as any[]).length).toBeGreaterThan(1);
+  });
+});
+
+describe('heavy-light-decomposition-panel（非法输入给明确提示帧）', () => {
+  it('孤立节点 / 父边重复 / 查询越界 / 长度不匹配，都给一帧提示而不是无限上跳崩掉', () => {
+    const bad: [number[][], number[], [number, number], string][] = [
+      [[[], [], []], [1, 2, 3], [1, 2], '父边'],                       // 孤立节点：曾经直接 RangeError 崩面板
+      [[[1], [0], []], [1, 2, 3], [0, 2], '根节点 0 出现了父边'],
+      [[[1], [2], []], [1, 2, 3], [0, 5], '越出节点范围'],
+      [[[1], [], []], [1, 2], [0, 2], '不匹配'],
+    ];
+    for (const [children, val, pair, needle] of bad) {
+      const frames = hldBuild(children, val, pair) as any[];
+      expect(frames.length).toBe(1);
+      expect(lastState(frames).result).toBeNull();
+      expect(String(lastState(frames).message)).toContain(needle);
+    }
+  });
+
+  it('合法树不被误伤', () => {
+    expect((hldBuild([[1], [2], []], [1, 2, 3], [0, 2]) as any[]).length).toBeGreaterThan(1);
+  });
+});

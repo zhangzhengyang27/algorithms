@@ -56,6 +56,36 @@ interface HLDState {
 
 export function buildSteps(children: number[][] = CHILDREN, val: number[] = VAL, queryPair: [number, number] = [8, 10]): VizStep<HLDState>[] {
   const n = children.length;
+  const badMsg = (() => {
+    if (n === 0 || val.length !== n) return `孩子表长度 ${n} 与权值长度 ${val.length} 不匹配或为空`;
+    const parents = new Array(n).fill(0);
+    for (const kids of children) for (const v of kids) {
+      if (v < 0 || v >= n) return `孩子下标 ${v} 越出 [0, ${n - 1}]`;
+      parents[v]++;
+    }
+    if (parents[0] !== 0) return '根节点 0 出现了父边，不是以 0 为根的树';
+    for (let v = 1; v < n; v++) if (parents[v] !== 1) return `节点 ${v} 有 ${parents[v]} 条父边，不是树`;
+    const up = new Array(n).fill(-1);
+    children.forEach((kids, u) => kids.forEach((v) => { up[v] = u; }));
+    for (let v = 0; v < n; v++) {
+      let x = v, hops = 0;
+      while (x !== 0 && hops++ <= n) x = up[x];
+      if (x !== 0) return `节点 ${v} 到不了根 0（存在环或孤立子树）`;
+    }
+    if (queryPair.some((x) => x < 0 || x >= n)) return `查询对 ${JSON.stringify(queryPair)} 越出节点范围`;
+    return null;
+  })();
+  if (badMsg) {
+    return [{
+      state: {
+        size: new Array(n).fill(0), depth: new Array(n).fill(0), heavy: new Array(n).fill(-1), top: new Array(n).fill(-1),
+        dfn: new Array(n).fill(-1), chainId: new Array(n).fill(-1), current: -1, curU: -1, curV: -1,
+        collected: [], segNodes: [], phase: 'done', result: null, message: `输入不合法：${badMsg}`,
+      },
+      description: '输入不合法',
+      codeLine: 1,
+    }];
+  }
   const steps: VizStep<HLDState>[] = [];
   const size = new Array(n).fill(0);
   const depth = new Array(n).fill(0);

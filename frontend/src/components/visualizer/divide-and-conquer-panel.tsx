@@ -31,6 +31,7 @@ interface DCState {
   mergeJ: number;
   tmpSegment: number[];
   invStep: number;
+  invTotal: number;
   totalInv: number;
   depth: number;
   phase: 'init' | 'split' | 'merge' | 'writeback' | 'done';
@@ -52,6 +53,7 @@ export function buildSteps(input: number[]): VizStep<DCState>[] {
     mergeJ: -1,
     tmpSegment: [],
     invStep: 0,
+    invTotal: 0,
     totalInv,
     depth: 0,
     phase: 'init',
@@ -121,7 +123,7 @@ export function buildSteps(input: number[]): VizStep<DCState>[] {
 
     for (let p = lo; p < hi; p++) nums[p] = tmp[p - lo];
     steps.push({
-      state: snap({ lo, hi, mid, depth, phase: 'writeback', message: `合并完成，写回 [${lo},${hi})，该区间已有序，本段累计逆序对 ${inv}` }),
+      state: snap({ lo, hi, mid, depth, invTotal: inv, phase: 'writeback', message: `合并完成，写回 [${lo},${hi})，该区间已有序，本段累计逆序对 ${inv}` }),
       description: `写回 [${lo},${hi})`,
       codeLine: 12,
     });
@@ -153,6 +155,7 @@ export function DivideAndConquerPanel() {
     mergeJ: -1,
     tmpSegment: [],
     invStep: 0,
+    invTotal: 0,
     totalInv: 0,
     depth: 0,
     phase: 'init',

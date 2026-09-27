@@ -38,6 +38,7 @@ const CURVES = [
 interface ComplexityState {
   visibleCount: number;
   activeN: number | null;
+  curveOps: { name: string; ops: number }[];
   message: string;
 }
 
@@ -45,7 +46,7 @@ export function buildSteps(maxN: number): VizStep<ComplexityState>[] {
   const steps: VizStep<ComplexityState>[] = [];
 
   steps.push({
-    state: { visibleCount: 0, activeN: null, message: `纵轴为操作次数（对数刻度），横轴为输入规模 n（1 ~ ${maxN}），逐条绘制增长曲线` },
+    state: { visibleCount: 0, activeN: null, curveOps: [], message: `纵轴为操作次数（对数刻度），横轴为输入规模 n（1 ~ ${maxN}），逐条绘制增长曲线` },
     description: '建立坐标系',
     codeLine: 0,
   });
@@ -60,7 +61,7 @@ export function buildSteps(maxN: number): VizStep<ComplexityState>[] {
   ];
   CURVES.forEach((c, i) => {
     steps.push({
-      state: { visibleCount: i + 1, activeN: null, message: `${c.name} — ${intro[i]}` },
+      state: { visibleCount: i + 1, activeN: null, curveOps: [], message: `${c.name} — ${intro[i]}` },
       description: `绘制 ${c.name}`,
       codeLine: i + 1,
     });
@@ -70,14 +71,14 @@ export function buildSteps(maxN: number): VizStep<ComplexityState>[] {
   for (const n of evalNs) {
     const worst = CURVES[CURVES.length - 1].ops(n);
     steps.push({
-      state: { visibleCount: CURVES.length, activeN: n, message: `n = ${n} 时各复杂度的操作次数与耗时估算（假设每次操作 1ns），O(2ⁿ) 已达 ${worst.toLocaleString()} 次` },
+      state: { visibleCount: CURVES.length, activeN: n, curveOps: CURVES.map((c) => ({ name: c.name, ops: c.ops(n) })), message: `n = ${n} 时各复杂度的操作次数与耗时估算（假设每次操作 1ns），O(2ⁿ) 已达 ${worst.toLocaleString()} 次` },
       description: `代入 n=${n}`,
       codeLine: 10,
     });
   }
 
   steps.push({
-    state: { visibleCount: CURVES.length, activeN: maxN, message: '结论：n 增大时曲线斜率差异急剧放大——选对算法复杂度比优化常数更重要' },
+    state: { visibleCount: CURVES.length, activeN: maxN, curveOps: CURVES.map((c) => ({ name: c.name, ops: c.ops(maxN) })), message: '结论：n 增大时曲线斜率差异急剧放大——选对算法复杂度比优化常数更重要' },
     description: '总结',
     codeLine: 17,
   });
@@ -121,7 +122,7 @@ export function TimeComplexityPanel() {
   const [maxN, setMaxN] = useState(16);
 
   const steps = useMemo(() => buildSteps(maxN), [maxN]);
-  const initial: ComplexityState = { visibleCount: 0, activeN: null, message: '' };
+  const initial: ComplexityState = { visibleCount: 0, activeN: null, curveOps: [], message: '' };
 
   const maxLog = Math.log10(Math.max(CURVES[CURVES.length - 1].ops(maxN), 1));
   const yTicks = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000].filter(

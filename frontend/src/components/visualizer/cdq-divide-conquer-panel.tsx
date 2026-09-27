@@ -47,6 +47,23 @@ interface CDQState {
 }
 
 export function buildSteps(pts: Point[] = PTS, maxC: number = MAXC): VizStep<CDQState>[] {
+  const bad = pts.length === 0
+    ? '点集为空：至少需要一个点'
+    : pts.some((p, i) => i > 0 && p.a < pts[i - 1].a)
+      ? '第一维 a 未按升序：CDQ 的「左边贡献给右边」依赖输入次序，喂乱序数据会算错 ans[]，请先按 a 排序（面板演示数据本身已排好）'
+      : pts.some((p) => p.c < 1 || p.c > maxC)
+        ? `c 值越出值域 [1, ${maxC}]，树状数组无法索引`
+        : null;
+  if (bad) {
+    return [{
+      state: {
+        ans: new Array(pts.length).fill(0), bit: new Array(maxC + 1).fill(0), rangeL: -1, rangeR: -1, mid: -1,
+        leftIds: [], rightIds: [], addedIds: [], curRightId: -1, phase: 'done', message: `输入不合法：${bad}`,
+      },
+      description: '输入不合法',
+      codeLine: 1,
+    }];
+  }
 
   const np = pts.length;
 
