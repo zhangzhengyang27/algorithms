@@ -1688,3 +1688,365 @@ describe('stack / queue / linked-list 面板', () => {
     });
   }
 });
+
+// ===== 第八批：DP 压缩/数位 DP/欧拉路径/B 树/伸展树/柱状图/分块/凸包/扫描线/分治逆序对/Hill 密码/加权随机 =====
+import { buildSteps as tspBuild } from '@/components/visualizer/dp-state-compression-panel';
+import { buildSteps as digitBuild } from '@/components/visualizer/dp-digit-panel';
+import { buildSteps as eulerBuild } from '@/components/visualizer/eulerian-path-panel';
+import { buildSteps as btreeBuild } from '@/components/visualizer/b-tree-panel';
+import { buildSteps as splayBuild } from '@/components/visualizer/splay-panel';
+import { buildSteps as rectBuild } from '@/components/visualizer/monotonic-stack-advanced-panel';
+import { buildSteps as sqrtBuild } from '@/components/visualizer/sqrt-decomposition-panel';
+import { buildSteps as hullBuild } from '@/components/visualizer/computational-geometry-panel';
+import { buildSteps as sweepBuild } from '@/components/visualizer/sweep-line-panel';
+import { buildSteps as dcBuild } from '@/components/visualizer/divide-and-conquer-panel';
+import { buildSteps as hillBuild } from '@/components/visualizer/hill-cipher-panel';
+import { buildSteps as wrBuild } from '@/components/visualizer/weighted-random-panel';
+
+// TSP：全排列暴力，不走位压 DP
+function refTsp(dist: number[][]): number {
+  const n = dist.length;
+  let best = Infinity;
+  const walk = (rest: number[], acc: number[]) => {
+    if (rest.length === 0) {
+      let s = 0, prev = 0;
+      for (const v of acc) { s += dist[prev][v]; prev = v; }
+      best = Math.min(best, s + dist[prev][0]);
+      return;
+    }
+    for (let i = 0; i < rest.length; i++) walk([...rest.slice(0, i), ...rest.slice(i + 1)], [...acc, rest[i]]);
+  };
+  walk(Array.from({ length: n - 1 }, (_, i) => i + 1), []);
+  return best;
+}
+
+// 1..n 里数字 1 出现的次数：逐个数位
+function refOnes(n: number): number {
+  let c = 0;
+  for (let x = 1; x <= n; x++) for (const ch of String(x)) if (ch === '1') c++;
+  return c;
+}
+
+// 欧拉迹的合法性：不是「抄输出」，而是拿原边表逐段核对
+function eulerTrailProblems(edges: [number, number][], start: number, path: number[]): string[] {
+  const bad: string[] = [];
+  if (path.length !== edges.length + 1) bad.push(`路径长度 ${path.length} != 边数+1 = ${edges.length + 1}`);
+  if (path[0] !== start) bad.push(`路径起点 ${path[0]} != 指定的 ${start}`);
+  const pool = edges.map(([u, v]) => `${u}>${v}`);
+  for (let i = 0; i + 1 < path.length; i++) {
+    const at = pool.indexOf(`${path[i]}>${path[i + 1]}`);
+    if (at < 0) { bad.push(`第 ${i} 段 ${path[i]}>${path[i + 1]} 不是未用过的边`); break; }
+    pool.splice(at, 1);
+  }
+  if (pool.length) bad.push(`有 ${pool.length} 条边没被走到：${pool.join(' ')}`);
+  return bad;
+}
+
+function refMaxRect(h: number[]): number {
+  let best = 0;
+  for (let i = 0; i < h.length; i++) {
+    let mn = Infinity;
+    for (let j = i; j < h.length; j++) { mn = Math.min(mn, h[j]); best = Math.max(best, mn * (j - i + 1)); }
+  }
+  return best;
+}
+
+// 凸包顶点：用「极角张角」判定——p 是顶点 ⟺ 其余点相对 p 的最大角度间隙严格大于 π。
+// 落在边上的共线点间隙正好是 π，全共线时两个端点间隙 > π，都与单调链的写法毫无关系。
+function refHullSet(points: [number, number][]): string[] {
+  const uniq = [...new Map(points.map((p) => [`${p[0]},${p[1]}`, p])).values()];
+  const isCorner = (i: number): boolean => {
+    const p = uniq[i];
+    const angs = uniq
+      .map((q, j) => (j === i ? null : Math.atan2(q[1] - p[1], q[0] - p[0])))
+      .filter((a): a is number => a !== null)
+      .sort((a, b) => a - b);
+    if (angs.length === 0) return true;
+    let maxGap = 2 * Math.PI - (angs[angs.length - 1] - angs[0]);
+    for (let k = 1; k < angs.length; k++) maxGap = Math.max(maxGap, angs[k] - angs[k - 1]);
+    return maxGap > Math.PI + 1e-9;
+  };
+  return uniq.filter((_, i) => isCorner(i)).map((p) => `${p[0]},${p[1]}`).sort();
+}
+
+function refUnionArea(rects: number[][]): number {
+  const xs = [...new Set(rects.flatMap((r) => [r[0], r[2]]))].sort((a, b) => a - b);
+  const ys = [...new Set(rects.flatMap((r) => [r[1], r[3]]))].sort((a, b) => a - b);
+  let area = 0;
+  for (let i = 0; i + 1 < xs.length; i++) {
+    for (let j = 0; j + 1 < ys.length; j++) {
+      const cx = (xs[i] + xs[i + 1]) / 2, cy = (ys[j] + ys[j + 1]) / 2;
+      if (rects.some(([x1, y1, x2, y2]) => cx > x1 && cx < x2 && cy > y1 && cy < y2)) {
+        area += (xs[i + 1] - xs[i]) * (ys[j + 1] - ys[j]);
+      }
+    }
+  }
+  return area;
+}
+
+function refInvCount(a: number[]): number {
+  let c = 0;
+  for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) if (a[i] > a[j]) c++;
+  return c;
+}
+
+// Hill：自己实现一遍，模运算取规范非负代表
+function refHill(message: string, K: number[][]): string {
+  const A = 'A'.charCodeAt(0);
+  const clean = message.toUpperCase().replace(/[^A-Z]/g, '');
+  const padded = clean.length % 2 === 1 ? `${clean}X` : clean;
+  const e = (u: number) => String.fromCharCode((((u % 26) + 26) % 26) + A);
+  let out = '';
+  for (let i = 0; i < padded.length; i += 2) {
+    const x = padded.charCodeAt(i) - A, y = padded.charCodeAt(i + 1) - A;
+    out += e(K[0][0] * x + K[0][1] * y) + e(K[1][0] * x + K[1][1] * y);
+  }
+  return out;
+}
+
+describe('dp-state-compression-panel（TSP 哈密顿回路）', () => {
+  it('空矩阵给一帧明确提示而不是抛异常', () => {
+    const frames = tspBuild([]);
+    expect(frames.length).toBe(1);
+    expect(lastState(frames).phase).toBe('done');
+  });
+
+  for (const dist of [
+    [[0, 10, 15, 20], [10, 0, 35, 25], [15, 35, 0, 30], [20, 25, 30, 0]],
+    [[0, 1, 1], [1, 0, 1], [1, 1, 0]],
+    [[0, 3, 93, 10], [3, 0, 22, 12], [93, 22, 0, 17], [10, 12, 17, 0]],
+    [[0, 5, 8, 12], [4, 0, 6, 9], [7, 5, 0, 3], [10, 8, 4, 0]],
+  ] as number[][][]) {
+    it(`${dist.length} 点的最短哈密顿回路等于全排列暴力`, () => {
+      const s = lastState(tspBuild(dist.map((r) => [...r])));
+      expect(s.result).toBe(refTsp(dist));
+    });
+  }
+});
+
+describe('dp-digit-panel（1~n 中数字 1 的出现次数）', () => {
+  for (const n of [321, 1, 9, 10, 11, 99, 1234]) {
+    it(`n=${n} 等于逐个数位统计`, () => {
+      expect(lastState(digitBuild(n)).result).toBe(refOnes(n));
+    });
+  }
+});
+
+describe('eulerian-path-panel（Hierholzer）', () => {
+  for (const [edges, start] of [
+    [[[0, 1], [1, 2], [2, 0], [0, 3], [3, 4], [4, 0]], 0],
+    [[[0, 1], [1, 2], [2, 0]], 0],
+    [[[0, 1], [1, 2]], 0],
+    [[[0, 1], [1, 0], [0, 2], [2, 0]], 1],
+  ] as [[number, number][], number][]) {
+    it(`边表 ${JSON.stringify(edges)}（起点 ${start}）的出口路径是一条覆盖全部边的欧拉迹`, () => {
+      const s = lastState(eulerBuild(edges.map(([u, v]) => [u, v]), start));
+      expect(eulerTrailProblems(edges, start, s.result as number[])).toEqual([]);
+    });
+  }
+});
+
+describe('b-tree-panel（B 树插入）', () => {
+  for (const [keys, t] of [
+    [[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110], 2],
+    [[5, 3, 8, 1, 9, 2, 7], 2],
+    [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 3],
+    [[42], 2],
+  ] as [number[], number][]) {
+    it(`插入 ${keys.length} 个键（t=${t}）后仍是合法 B 树且中序等于升序输入`, () => {
+      const s = lastState(btreeBuild([...keys], t));
+      const byId = new Map<number, any>(s.nodes.map((nd: any) => [nd.id, nd]));
+      const problems: string[] = [];
+      const inorder: number[] = [];
+      const leafDepths = new Set<number>();
+      const walk = (id: number, d: number, lo: number, hi: number) => {
+        const nd = byId.get(id);
+        if (!nd) { problems.push(`引用了不存在的节点 ${id}`); return; }
+        const k: number[] = nd.keys;
+        if (k.length > 2 * t - 1) problems.push(`节点 ${id} 有 ${k.length} 个键 > 2t-1=${2 * t - 1}`);
+        if (id !== s.rootId && k.length < t - 1) problems.push(`非根节点 ${id} 只有 ${k.length} 个键 < t-1=${t - 1}`);
+        for (let i = 1; i < k.length; i++) if (k[i - 1] >= k[i]) problems.push(`节点 ${id} 键未严格升序`);
+        if (nd.childIds.length !== 0 && nd.childIds.length !== k.length + 1) problems.push(`节点 ${id} 孩子数 ${nd.childIds.length} 既不是叶子(0)也不是键数+1`);
+        if (nd.childIds.length === 0) leafDepths.add(d);
+        nd.childIds.forEach((c: number, i: number) => {
+          walk(c, d + 1, i === 0 ? lo : k[i - 1], i === k.length ? hi : k[i]);
+        });
+        k.forEach((key) => {
+          inorder.push(key);
+          if (!(key > lo && key < hi)) problems.push(`键 ${key} 越出祖先区间 (${lo},${hi})`);
+        });
+      };
+      walk(s.rootId, 0, -Infinity, Infinity);
+      expect(problems).toEqual([]);
+      expect(leafDepths.size).toBe(1);
+      inorder.sort((a, b) => a - b);
+      expect(inorder).toEqual([...keys].sort((a, b) => a - b));
+    });
+  }
+});
+
+describe('splay-panel（伸展树插入）', () => {
+  for (const values of [[10, 20, 30, 40, 50, 25, 5], [7], [5, 3, 8, 1, 9, 7], [1, 2, 3, 4, 5]]) {
+    it(`插入 ${JSON.stringify(values)} 后中序有序、multiset 守恒，且最后插入的值在根`, () => {
+      const s = lastState(splayBuild([...values]));
+      const nodes: any[] = s.nodes;
+      const out: number[] = [];
+      const seen = new Set<number>();
+      const walk = (i: number) => {
+        if (i < 0 || !nodes[i] || seen.has(i)) return;
+        seen.add(i);
+        walk(nodes[i].left);
+        out.push(nodes[i].val);
+        walk(nodes[i].right);
+      };
+      walk(s.root);
+      expect(out).toEqual([...values].sort((a, b) => a - b));
+      expect(out.every((v, i) => i === 0 || out[i - 1] <= v)).toBe(true);
+      expect(nodes[s.root].val).toBe(values[values.length - 1]);
+    });
+  }
+});
+
+describe('monotonic-stack-advanced-panel（柱状图最大矩形 LC84）', () => {
+  for (const heights of [[2, 1, 5, 6, 2, 3], [2, 4], [5, 4, 3, 2, 1], [1], [2, 2, 2, 2], [0, 0], [1000000], [6, 1, 2, 1, 2, 1]]) {
+    it(`最大矩形面积 ${JSON.stringify(heights)}`, () => {
+      const s = lastState(rectBuild([...heights]));
+      expect(s.maxArea).toBe(refMaxRect(heights));
+      // 有非零矩形时，报告的「最佳区间」必须自己撑得起这个面积
+      if (s.maxArea > 0) {
+        expect(s.bestHeight * (s.bestRight - s.bestLeft + 1)).toBe(s.maxArea);
+        for (let i = s.bestLeft; i <= s.bestRight; i++) expect(heights[i]).toBeGreaterThanOrEqual(s.bestHeight);
+      }
+    });
+  }
+});
+
+describe('sqrt-decomposition-panel（分块查询 + 单点改）', () => {
+  const cases: [number[], number, number, number, number][] = [
+    [[3, 1, 4, 1, 5, 9, 2, 6, 7, 4], 1, 8, 5, 3],
+    [[5], 0, 0, 0, 9],
+    [[1, 2, 3, 4, 5, 6, 7, 8], 0, 7, 3, 100],
+    [[2, 2, 2, 2, 2], 1, 3, 2, 0],
+  ];
+  for (const [nums, l, r, updIdx, updVal] of cases) {
+    it(`sum[${l}..${r}] 与末态数组/块和都等于朴素计算`, () => {
+      const pristine = [...nums];
+      const frames = sqrtBuild(nums, l, r, updIdx, updVal);
+      expect(nums).toEqual(pristine); // 面板不得就地改调用方的数组
+      const q = lastState(frames.filter((f: any) => f.state.phase === 'query'));
+      let naive = 0;
+      for (let i = l; i <= r; i++) naive += pristine[i];
+      expect(q.partialSum).toBe(naive);
+      const s = lastState(frames);
+      const after = [...pristine];
+      after[updIdx] = updVal;
+      expect(s.nums).toEqual(after);
+      const size = s.size as number;
+      const blockSum: number[] = [];
+      for (let b = 0; b * size < after.length; b++) {
+        blockSum.push(after.slice(b * size, Math.min(after.length, (b + 1) * size)).reduce((x, y) => x + y, 0));
+      }
+      expect(s.blocks).toEqual(blockSum);
+    });
+  }
+});
+
+describe('computational-geometry-panel（Andrew 单调链凸包）', () => {
+  for (const pts of [
+    [[0, 0], [4, 0], [4, 4], [0, 4], [2, 1], [1, 2], [3, 2], [2, 3], [2, 2], [5, 2], [2, 5]],
+    [[0, 0], [2, 0], [1, 0], [0, 2], [2, 2], [1, 1]],
+    [[0, 0], [1, 1], [2, 2], [3, 3]],
+    [[0, 0], [1, 0], [0, 1]],
+    [[1, 1], [1, 1], [2, 2], [0, 3]],
+    [[5, 5], [1, 2], [3, 1], [6, 4], [2, 6], [4, 3], [0, 4]],
+  ] as [number, number][][]) {
+    it(`凸包顶点集等于「枚举有序点对」暴力求出的集合`, () => {
+      const s = lastState(hullBuild(pts.map((p) => [...p] as [number, number])));
+      const got = [...new Set((s.hullFinal as [number, number][]).map((p) => `${p[0]},${p[1]}`))].sort();
+      expect(got).toEqual(refHullSet(pts));
+      // 每个输入点都必须落在凸包多边形内部或边上
+      const poly = s.hullFinal as [number, number][];
+      if (poly.length >= 3) {
+        for (const p of pts) {
+          const inside = poly.every((a, i) => {
+            const b = poly[(i + 1) % poly.length];
+            return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) >= 0;
+          });
+          expect(inside).toBe(true);
+        }
+      }
+    });
+  }
+});
+
+describe('sweep-line-panel（扫描线求矩形面积并）', () => {
+  it('没有矩形时给一帧明确提示而不是抛异常', () => {
+    const frames = sweepBuild([]);
+    expect(frames.length).toBe(1);
+    expect(lastState(frames).area).toBe(0);
+  });
+
+  for (const rects of [
+    [[1, 1, 4, 4], [2, 3, 6, 6], [4, 2, 7, 5]],
+    [[0, 0, 2, 2], [0, 0, 2, 2]],
+    [[0, 0, 1, 1], [2, 2, 3, 3]],
+    [[0, 0, 2, 2], [2, 0, 4, 2]],
+    [[0, 0, 3, 3]],
+  ] as [number, number, number, number][][]) {
+    it(`面积并 ${JSON.stringify(rects)} 等于坐标压缩后的格子暴力`, () => {
+      expect(lastState(sweepBuild(rects.map((r) => [...r] as [number, number, number, number]))).area).toBe(refUnionArea(rects));
+    });
+  }
+});
+
+describe('divide-and-conquer-panel（归并求逆序对）', () => {
+  for (const input of [[5, 2, 8, 1, 9, 3, 7, 4], [2, 4, 1, 3, 5], [5, 4, 3, 2, 1], [1, 2, 3], [2, 2, 1], [1]]) {
+    it(`逆序对数 ${JSON.stringify(input)} 等于 O(n^2) 暴力，且末态已有序`, () => {
+      const frames = dcBuild([...input]);
+      const s = lastState(frames);
+      expect(s.totalInv).toBe(refInvCount(input));
+      expect(s.nums).toEqual([...input].sort((a, b) => a - b));
+      // 面板同时维护「局部 inv」与「全局 totalInv」两份计数，逐帧增量之和必须等于末帧总数
+      const sumSteps = frames.reduce((acc: number, f: any) => acc + (f.state.invStep ?? 0), 0);
+      expect(sumSteps).toBe(s.totalInv);
+    });
+  }
+});
+
+describe('hill-cipher-panel（2x2 Hill 密码）', () => {
+  for (const [message, K] of [
+    ['HELLO', [[3, 3], [2, 5]]],
+    ['Meet me at the park', [[6, 24], [1, 13]]],
+    ['abc', [[1, 0], [0, 1]]],
+    ['ZZZZ', [[0, 1], [1, 0]]],
+    ['hi!!', [[3, -2], [1, 7]]],
+  ] as [string, number[][]][]) {
+    it(`密文 ${JSON.stringify(message)} × K 等于独立实现的矩阵乘法`, () => {
+      expect(lastState(hillBuild(message, K)).cipher).toBe(refHill(message, K));
+    });
+  }
+});
+
+describe('weighted-random-panel（加权随机抽样）', () => {
+  const items = ['a', 'b', 'c', 'd'];
+  const weights = [1, 2, 3, 4];
+  const cum: number[] = [];
+  weights.forEach((w, i) => cum.push(w + (cum[i - 1] ?? 0)));
+  it('累计权重表等于独立前缀和，且 pick 落在自己声明的区间里', () => {
+    for (let seed = 0; seed < 40; seed++) {
+      const s = lastState(wrBuild(items, weights, seed));
+      expect(s.cum).toEqual(cum);
+      expect(s.r).toBeGreaterThanOrEqual(0);
+      expect(s.r).toBeLessThanOrEqual(cum[cum.length - 1]);
+      let expectPick = -1;
+      for (let i = 0; i < cum.length; i++) if (cum[i] >= s.r) { expectPick = i; break; }
+      expect(s.pick).toBe(expectPick);
+    }
+  });
+  it('权重大的项被选中次数不减于权重小的项（否则随机分布是错的）', () => {
+    const hits = new Array(items.length).fill(0);
+    for (let seed = 0; seed < 1000; seed++) hits[lastState(wrBuild(items, weights, seed)).pick as number]++;
+    expect(hits.every((h) => h > 0)).toBe(true);
+    for (let i = 1; i < hits.length; i++) expect(hits[i]).toBeGreaterThanOrEqual(hits[i - 1]);
+  });
+});

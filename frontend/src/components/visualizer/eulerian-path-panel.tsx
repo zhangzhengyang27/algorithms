@@ -37,7 +37,7 @@ interface EulerianState {
   message: string;
 }
 
-function buildSteps(edges: [number, number][], start: number): VizStep<EulerianState>[] {
+export function buildSteps(edges: [number, number][], start: number): VizStep<EulerianState>[] {
   const steps: VizStep<EulerianState>[] = [];
   const adj = new Map<number, number[]>();
   for (const [u, v] of edges) {

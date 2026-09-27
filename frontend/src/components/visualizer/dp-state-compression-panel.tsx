@@ -51,8 +51,15 @@ const fmt = (x: number) => (x === Infinity ? '∞' : String(x));
 const setOf = (m: number, n: number) =>
   '{' + Array.from({ length: n }, (_, i) => i).filter((i) => m & (1 << i)).join(',') + '}';
 
-function buildSteps(dist: number[][]): VizStep<DpStateCompressionState>[] {
+export function buildSteps(dist: number[][]): VizStep<DpStateCompressionState>[] {
   const n = dist.length;
+  if (n === 0) {
+    return [{
+      state: { n: 0, dist, dp: [], mask: 0, u: -1, v: -1, phase: 'done', result: null, message: '距离矩阵为空：至少需要一个城市' },
+      description: '空输入',
+      codeLine: 1,
+    }];
+  }
   const FULL = 1 << n;
   const dp = Array.from({ length: FULL }, () => new Array(n).fill(Infinity));
   dp[1][0] = 0;

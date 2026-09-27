@@ -21,7 +21,7 @@ interface WeightedRandomState {
   message: string;
 }
 
-function buildSteps(items: string[], weights: number[], seed: number): VizStep<WeightedRandomState>[] {
+export function buildSteps(items: string[], weights: number[], seed: number): VizStep<WeightedRandomState>[] {
   const steps: VizStep<WeightedRandomState>[] = [];
   const cum: number[] = [];
   let prev = 0;

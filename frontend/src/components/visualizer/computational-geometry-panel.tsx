@@ -55,7 +55,7 @@ function cross(O: Pt, A: Pt, B: Pt): number {
 
 const DEFAULT_POINTS: Pt[] = [[0, 0], [4, 0], [4, 4], [0, 4], [2, 1], [1, 2], [3, 2], [2, 3], [2, 2], [5, 2], [2, 5]];
 
-function buildSteps(points: Pt[]): VizStep<GeometryState>[] {
+export function buildSteps(points: Pt[]): VizStep<GeometryState>[] {
   const steps: VizStep<GeometryState>[] = [];
   const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const base = (phase: GPhase): GeometryState => ({

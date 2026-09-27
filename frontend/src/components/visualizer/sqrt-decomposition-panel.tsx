@@ -47,7 +47,7 @@ interface SqrtState {
   message: string;
 }
 
-function buildSteps(numsInput: number[], queryL: number, queryR: number, updIdx: number, updVal: number): VizStep<SqrtState>[] {
+export function buildSteps(numsInput: number[], queryL: number, queryR: number, updIdx: number, updVal: number): VizStep<SqrtState>[] {
   const steps: VizStep<SqrtState>[] = [];
   const nums = [...numsInput];
   const n = nums.length;

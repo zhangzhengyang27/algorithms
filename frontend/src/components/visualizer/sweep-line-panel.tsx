@@ -71,8 +71,15 @@ interface SweepState {
   message: string;
 }
 
-function buildSteps(rects: Rect[]): VizStep<SweepState>[] {
+export function buildSteps(rects: Rect[]): VizStep<SweepState>[] {
   const steps: VizStep<SweepState>[] = [];
+  if (rects.length === 0) {
+    return [{
+      state: { rects, events: [], sweepX: 0, active: [], strips: [], area: 0, covered: 0, eventIdx: -1, phase: 'done', message: '没有矩形：面积并 = 0' },
+      description: '空输入',
+      codeLine: 1,
+    }];
+  }
   const events: [number, number, number, number][] = [];
   for (const [x1, y1, x2, y2] of rects) {
     events.push([x1, 0, y1, y2]);

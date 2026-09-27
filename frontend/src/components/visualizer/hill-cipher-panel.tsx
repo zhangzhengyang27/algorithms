@@ -33,7 +33,7 @@ function numToChar(n: number): string {
   return String.fromCharCode(((n % alphabetSize) + alphabetSize) % alphabetSize + A);
 }
 
-function buildSteps(message: string, K: number[][]): VizStep<HillCipherState>[] {
+export function buildSteps(message: string, K: number[][]): VizStep<HillCipherState>[] {
   const steps: VizStep<HillCipherState>[] = [];
   const clean = message.toUpperCase().replace(/[^A-Z]/g, '');
   let padded = clean;

@@ -38,7 +38,7 @@ function cloneNodes(nodes: SplayNode[]): SplayNode[] {
   return nodes.map((n) => ({ ...n }));
 }
 
-function buildSteps(values: number[]): VizStep<SplayState>[] {
+export function buildSteps(values: number[]): VizStep<SplayState>[] {
   const steps: VizStep<SplayState>[] = [];
   let nodes: SplayNode[] = [];
   let parent: number[] = []; // 辅助数组：节点 -> 父索引，-1 表示根

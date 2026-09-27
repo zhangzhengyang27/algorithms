@@ -41,7 +41,7 @@ interface DpDigitState {
   message: string;
 }
 
-function buildSteps(n: number): VizStep<DpDigitState>[] {
+export function buildSteps(n: number): VizStep<DpDigitState>[] {
   const digits = String(n).split('').map(Number);
   const steps: VizStep<DpDigitState>[] = [];
   const memo = new Map<string, number>();

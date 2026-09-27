@@ -37,7 +37,7 @@ interface MonoStackState {
   done: boolean;
 }
 
-function buildSteps(heights: number[]): VizStep<MonoStackState>[] {
+export function buildSteps(heights: number[]): VizStep<MonoStackState>[] {
   const steps: VizStep<MonoStackState>[] = [];
   const stack: number[] = [];
   let maxArea = 0;

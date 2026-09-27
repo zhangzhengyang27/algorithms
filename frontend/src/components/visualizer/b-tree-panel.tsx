@@ -55,7 +55,7 @@ interface BTreeState {
   message: string;
 }
 
-function buildSteps(insertKeys: number[], t: number): VizStep<BTreeState>[] {
+export function buildSteps(insertKeys: number[], t: number): VizStep<BTreeState>[] {
   const steps: VizStep<BTreeState>[] = [];
   const nodes: BTNode[] = [{ id: 0, keys: [], childIds: [] }];
   let rootId = 0;
