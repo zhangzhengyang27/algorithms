@@ -155,26 +155,26 @@ export function TimeComplexityPanel() {
 
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full bg-bg rounded-lg border border-edge">
             {/* axes */}
-            <line x1={ML} y1={MT} x2={ML} y2={H - MB} stroke="#444" strokeWidth={1} />
-            <line x1={ML} y1={H - MB} x2={W - MR} y2={H - MB} stroke="#444" strokeWidth={1} />
+            <line x1={ML} y1={MT} x2={ML} y2={H - MB} style={{ stroke: 'var(--edge-2)' }} strokeWidth={1} />
+            <line x1={ML} y1={H - MB} x2={W - MR} y2={H - MB} style={{ stroke: 'var(--edge-2)' }} strokeWidth={1} />
             {yTicks.map((v) => {
               const y = H - MB - (Math.log10(v) / maxLog) * (H - MT - MB);
               return (
                 <g key={v}>
                   <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#2a2a2a" strokeWidth={1} strokeDasharray="3 3" />
-                  <text x={ML - 6} y={y + 3} textAnchor="end" fontSize={9} fill="#777">
+                  <text x={ML - 6} y={y + 3} textAnchor="end" fontSize={9} style={{ fill: 'var(--ink-3)' }}>
                     {v >= 1e6 ? `1e${Math.round(Math.log10(v))}` : v}
                   </text>
                 </g>
               );
             })}
             {[2, 4, 8, 16, 32].filter((n) => n <= maxN).map((n) => (
-              <text key={n} x={xOf(n, maxN)} y={H - MB + 14} textAnchor="middle" fontSize={9} fill="#777">
+              <text key={n} x={xOf(n, maxN)} y={H - MB + 14} textAnchor="middle" fontSize={9} style={{ fill: 'var(--ink-3)' }}>
                 {n}
               </text>
             ))}
-            <text x={W - MR} y={H - MB + 26} textAnchor="end" fontSize={9} fill="#666">n</text>
-            <text x={10} y={MT + 4} fontSize={9} fill="#666">ops</text>
+            <text x={W - MR} y={H - MB + 26} textAnchor="end" fontSize={9} style={{ fill: 'var(--ink-3)' }}>n</text>
+            <text x={10} y={MT + 4} fontSize={9} style={{ fill: 'var(--ink-3)' }}>ops</text>
 
             {/* active n vertical line */}
             {state.activeN !== null && (

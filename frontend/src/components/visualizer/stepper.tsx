@@ -4,6 +4,7 @@ import { Play, Pause, SkipBack, SkipForward, RotateCcw, Plus, Minus } from 'luci
 import clsx from 'clsx';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { CodePanel } from './code-panel';
+import { useSettingsStore } from '@/store';
 
 export interface VizStep<TState> {
   state: TState;
@@ -34,7 +35,10 @@ export function Stepper<TState>({
 }: BaseProps<TState>) {
   const [current, setCurrent] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(500);
+  // 设置页的「动画速度」是基准间隔，面板下拉是在它之上乘倍率
+  const baseSpeed = useSettingsStore((s) => s.animationSpeed);
+  const [multiplier, setMultiplier] = useState(1);
+  const speed = Math.max(40, Math.round(baseSpeed / multiplier));
   const ref = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -123,15 +127,17 @@ export function Stepper<TState>({
         <div className="flex items-center gap-2 ml-2 text-sm text-ink-3">
           速度:
           <select
-            value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
+            value={multiplier}
+            onChange={(e) => setMultiplier(Number(e.target.value))}
             className="bg-surface-2 border border-edge rounded px-2 py-1"
+            aria-label="播放倍率"
           >
-            <option value={1000}>0.5x</option>
-            <option value={500}>1x</option>
-            <option value={250}>2x</option>
-            <option value={100}>4x</option>
+            <option value={0.5}>0.5x</option>
+            <option value={1}>1x</option>
+            <option value={2}>2x</option>
+            <option value={4}>4x</option>
           </select>
+          <span className="font-mono text-xs text-ink-3">{speed}ms</span>
         </div>
 
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{headerActions}</div>

@@ -90,6 +90,7 @@ export default function SettingsPage() {
                   onChange={(e) => setAnimationSpeed(Number(e.target.value))}
                   className="w-full max-w-xs accent-[var(--brand)]"
                 />
+                <p className="text-xs text-ink-3 mt-2">面板播放的基准间隔，面板内的倍率在此之上叠加</p>
               </div>
 
               <div className="flex items-center justify-between max-w-xs">

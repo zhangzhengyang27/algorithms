@@ -240,8 +240,8 @@ export function SegmentTreeAdvancedPanel() {
               const rc = SEG_NODES.find((c) => c.idx === 2 * n.idx + 2)!;
               return (
                 <g key={`e${n.idx}`}>
-                  <line x1={xPos(n.l, n.r)} y1={yPos(n.depth) + 24} x2={xPos(lc.l, lc.r)} y2={yPos(lc.depth) - 24} stroke="#333" strokeWidth={1.2} />
-                  <line x1={xPos(n.l, n.r)} y1={yPos(n.depth) + 24} x2={xPos(rc.l, rc.r)} y2={yPos(rc.depth) - 24} stroke="#333" strokeWidth={1.2} />
+                  <line x1={xPos(n.l, n.r)} y1={yPos(n.depth) + 24} x2={xPos(lc.l, lc.r)} y2={yPos(lc.depth) - 24} style={{ stroke: 'var(--edge-2)' }} strokeWidth={1.2} />
+                  <line x1={xPos(n.l, n.r)} y1={yPos(n.depth) + 24} x2={xPos(rc.l, rc.r)} y2={yPos(rc.depth) - 24} style={{ stroke: 'var(--edge-2)' }} strokeWidth={1.2} />
                 </g>
               );
             })}
@@ -258,8 +258,8 @@ export function SegmentTreeAdvancedPanel() {
               return (
                 <g key={`n${n.idx}`}>
                   <rect x={x - 34} y={y - 24} width={68} height={48} rx={8} fill={fill} stroke={stroke} strokeWidth={isActive || isTagged || isPushed ? 2.5 : 1.5} />
-                  <text x={x} y={y - 2} textAnchor="middle" fontSize="13" fontWeight="bold" fill={isQueryHit ? '#93c5fd' : '#e5e7eb'}>{state.tree[n.idx]}</text>
-                  <text x={x} y={y + 14} textAnchor="middle" fontSize="9" fill="#9ca3af">[{n.l},{n.r}]</text>
+                  <text x={x} y={y - 2} textAnchor="middle" fontSize="13" fontWeight="bold" style={{ fill: isQueryHit ? 'var(--brand)' : '#e5e7eb' }}>{state.tree[n.idx]}</text>
+                  <text x={x} y={y + 14} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-3)' }}>[{n.l},{n.r}]</text>
                   {hasLazy && (
                     <g>
                       <rect x={x + 18} y={y - 32} width={26} height={16} rx={4} fill="#7f1d1d" stroke="#ef4444" strokeWidth={1} />

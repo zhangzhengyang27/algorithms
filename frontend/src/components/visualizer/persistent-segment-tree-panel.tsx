@@ -254,11 +254,11 @@ export function PersistentSegmentTreePanel() {
                 return (
                   <g key={`n${l}-${r}`}>
                     <rect x={x - 33} y={y - 24} width={66} height={48} rx={8} fill={fill} stroke={stroke} strokeWidth={isNew || isCurV || isCurU ? 2.5 : 1.5} />
-                    <text x={x} y={y - 4} textAnchor="middle" fontSize="14" fontWeight="bold" fill={isNew ? '#fde047' : '#e5e7eb'}>{node.sum}</text>
-                    <text x={x} y={y + 12} textAnchor="middle" fontSize="9" fill="#9ca3af">[{l},{r}]</text>
-                    <text x={x + 26} y={y - 14} textAnchor="middle" fontSize="8" fill="#6b7280">v{node.ver}</text>
+                    <text x={x} y={y - 4} textAnchor="middle" fontSize="14" fontWeight="bold" style={{ fill: isNew ? 'var(--warn)' : '#e5e7eb' }}>{node.sum}</text>
+                    <text x={x} y={y + 12} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-3)' }}>[{l},{r}]</text>
+                    <text x={x + 26} y={y - 14} textAnchor="middle" fontSize="8" style={{ fill: 'var(--ink-3)' }}>v{node.ver}</text>
                     {uMap && uNode && (
-                      <text x={x} y={y + 34} textAnchor="middle" fontSize="9" fill="#93c5fd">u:{uNode.sum} v:{node.sum}</text>
+                      <text x={x} y={y + 34} textAnchor="middle" fontSize="9" style={{ fill: 'var(--brand)' }}>u:{uNode.sum} v:{node.sum}</text>
                     )}
                   </g>
                 );

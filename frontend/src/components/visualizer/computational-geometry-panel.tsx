@@ -206,10 +206,10 @@ export function ComputationalGeometryPanel() {
               <svg viewBox={`0 0 ${GW} ${GH}`} className="w-full lg:w-[55%] shrink-0 bg-bg rounded-lg border border-edge">
                 {/* grid */}
                 {Array.from({ length: Math.round(maxX - minX) + 1 }, (_, i) => minX + i).map((gx) => (
-                  <line key={`gx${gx}`} x1={sx(gx)} y1={GPAD - 10} x2={sx(gx)} y2={GH - GPAD + 10} stroke="#1f1f1f" strokeWidth={1} />
+                  <line key={`gx${gx}`} x1={sx(gx)} y1={GPAD - 10} x2={sx(gx)} y2={GH - GPAD + 10} style={{ stroke: 'var(--edge)' }} strokeWidth={1} />
                 ))}
                 {Array.from({ length: Math.round(maxY - minY) + 1 }, (_, i) => minY + i).map((gy) => (
-                  <line key={`gy${gy}`} x1={GPAD - 10} y1={sy(gy)} x2={GW - GPAD + 10} y2={sy(gy)} stroke="#1f1f1f" strokeWidth={1} />
+                  <line key={`gy${gy}`} x1={GPAD - 10} y1={sy(gy)} x2={GW - GPAD + 10} y2={sy(gy)} style={{ stroke: 'var(--edge)' }} strokeWidth={1} />
                 ))}
 
                 {/* final hull polygon */}
@@ -262,7 +262,7 @@ export function ComputationalGeometryPanel() {
                   return (
                     <g key={`${fmt(p)}-${i}`}>
                       <circle cx={sx(p[0])} cy={sy(p[1])} r={isCurrent ? 7 : 5} fill={fill} stroke="#111" strokeWidth={1.5} />
-                      <text x={sx(p[0]) + 8} y={sy(p[1]) - 7} fontSize={8.5} fill="#777" fontFamily="monospace">
+                      <text x={sx(p[0]) + 8} y={sy(p[1]) - 7} fontSize={8.5} style={{ fill: 'var(--ink-3)' }} fontFamily="monospace">
                         {fmt(p)}
                       </text>
                     </g>

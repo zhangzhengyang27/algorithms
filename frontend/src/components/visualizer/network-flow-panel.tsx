@@ -230,7 +230,7 @@ export function NetworkFlowPanel() {
             <svg viewBox="0 0 630 280" className="w-full max-w-2xl mx-auto">
               <defs>
                 <marker id="nf-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                  <path d="M0,0 L8,3 L0,6 Z" fill="#666" />
+                  <path d="M0,0 L8,3 L0,6 Z" style={{ fill: 'var(--ink-3)' }} />
                 </marker>
                 <marker id="nf-arrow-yellow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6 Z" fill="#facc15" />
@@ -274,7 +274,8 @@ export function NetworkFlowPanel() {
                       textAnchor="middle"
                       dominantBaseline="middle"
                       fontSize="10"
-                      fill={onPath ? '#fde047' : '#9ca3af'}
+                      /* 走主题令牌而不是 #fde047/#9ca3af：暗色下几乎同色，浅色下才读得清 */
+                      style={{ fill: onPath ? 'var(--warn)' : 'var(--ink-2)' }}
                       fontFamily="monospace"
                     >
                       {Math.max(0, f)}/{c}
@@ -297,7 +298,7 @@ export function NetworkFlowPanel() {
                       stroke={onPath ? '#facc15' : isVisited ? '#60a5fa' : isSource || isSink ? '#4ade80' : '#444'}
                       strokeWidth={onPath || isSource || isSink ? 2 : 1.5}
                     />
-                    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="bold" fill={onPath ? '#fde047' : isVisited ? '#93c5fd' : '#e5e7eb'}>
+                    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="bold" style={{ fill: onPath || isVisited ? 'var(--ink)' : '#e5e7eb' }}>
                       {NODE_LABELS[i]}
                     </text>
                   </g>

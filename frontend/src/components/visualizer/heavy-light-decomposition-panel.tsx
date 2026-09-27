@@ -294,8 +294,8 @@ export function HeavyLightDecompositionPanel() {
               return (
                 <g key={u}>
                   <circle cx={cx} cy={cy} r={R} fill={fill} stroke={stroke} strokeWidth={inSeg ? 3 : 2} />
-                  <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#e5e7eb">{u}</text>
-                  <text x={cx} y={cy + R + 12} textAnchor="middle" fontSize="8" fill="#9ca3af">
+                  <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fontWeight="bold" style={{ fill: isU || isV || inPath || inSeg || state.chainId[u] >= 0 ? 'var(--ink)' : '#e5e7eb' }}>{u}</text>
+                  <text x={cx} y={cy + R + 12} textAnchor="middle" fontSize="8" style={{ fill: 'var(--ink-3)' }}>
                     {state.dfn[u] >= 0 ? `dfn=${state.dfn[u]}` : state.size[u] > 0 ? `sz=${state.size[u]}` : ''}
                   </text>
                 </g>

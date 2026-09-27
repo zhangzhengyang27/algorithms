@@ -198,11 +198,13 @@ export function UnionFindAdvancedPanel() {
           pos.set(x, { x: x * X + PADX, y: getDepth(x, state.parent) * Y + PADY });
         }
         const nodeColor = (x: number) => {
-          if (state.compressed.includes(x)) return { fill: '#16a34a2e', stroke: '#16a34a', text: '#86efac' };
-          if (state.opA === x) return { fill: '#eab30833', stroke: '#eab308', text: '#fde047' };
-          if (state.opB === x) return { fill: '#a855f733', stroke: '#a855f7', text: '#d8b4fe' };
-          if (state.findPath.includes(x)) return { fill: '#3b82f626', stroke: '#3b82f6', text: '#93c5fd' };
-          if (state.rootA === x || state.rootB === x) return { fill: '#0ea5e926', stroke: '#0ea5e9', text: '#7dd3fc' };
+          // 着色态的圆是 15–20% 透明色（浅色主题下=浅底），数字必须跟主题走；
+          // 默认态是实心深色圆，数字固定用亮灰
+          if (state.compressed.includes(x)) return { fill: '#16a34a2e', stroke: '#16a34a', text: 'var(--ink)' };
+          if (state.opA === x) return { fill: '#eab30833', stroke: '#eab308', text: 'var(--ink)' };
+          if (state.opB === x) return { fill: '#a855f733', stroke: '#a855f7', text: 'var(--ink)' };
+          if (state.findPath.includes(x)) return { fill: '#3b82f626', stroke: '#3b82f6', text: 'var(--ink)' };
+          if (state.rootA === x || state.rootB === x) return { fill: '#0ea5e926', stroke: '#0ea5e9', text: 'var(--ink)' };
           return { fill: '#1a1a1a', stroke: '#333', text: '#9ca3af' };
         };
         return (
@@ -234,8 +236,8 @@ export function UnionFindAdvancedPanel() {
                 return (
                   <g key={`n${x}`}>
                     <circle cx={p.x} cy={p.y} r={R} fill={c.fill} stroke={c.stroke} strokeWidth={2} />
-                    <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="13" fontWeight="bold" fill={c.text}>{x}</text>
-                    {isRoot && <text x={p.x} y={p.y - R - 6} textAnchor="middle" fontSize="8" fill="#7dd3fc">根</text>}
+                    <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="13" fontWeight="bold" style={{ fill: c.text }}>{x}</text>
+                    {isRoot && <text x={p.x} y={p.y - R - 6} textAnchor="middle" fontSize="8" style={{ fill: 'var(--brand)' }}>根</text>}
                   </g>
                 );
               })}

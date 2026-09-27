@@ -172,7 +172,7 @@ export function DpStateMachinePanel() {
             <svg viewBox="0 0 400 190" className="w-full max-w-[420px]">
               <defs>
                 <marker id="arrow-dp" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                  <path d="M0,0 L8,3 L0,6" fill="#666" />
+                  <path d="M0,0 L8,3 L0,6" style={{ fill: 'var(--ink-3)' }} />
                 </marker>
                 <marker id="arrow-dp-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6" fill="#facc15" />

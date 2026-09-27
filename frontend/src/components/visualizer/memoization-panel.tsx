@@ -226,15 +226,16 @@ function TreeSvg({ root, phase, completed, active, width, height }: {
 }) {
   const completedSet = completed;
   function nodeColor(node: MNode): { fill: string; stroke: string; text: string } {
+    // 着色节点是 15–30% 透明色（浅色主题下=浅底），数字必须跟主题走；默认态是实心深色圆，数字固定亮灰
     if (phase === 'naive') {
-      if (node.id === active) return { fill: 'rgba(250,204,21,0.3)', stroke: '#facc15', text: '#fde047' };
-      if (node.duplicate) return { fill: 'rgba(239,68,68,0.15)', stroke: '#b91c1c', text: '#f87171' };
-      if (completedSet.has(node.id)) return { fill: 'rgba(96,165,250,0.15)', stroke: '#3b82f6', text: '#93c5fd' };
+      if (node.id === active) return { fill: 'rgba(250,204,21,0.3)', stroke: '#facc15', text: 'var(--ink)' };
+      if (node.duplicate) return { fill: 'rgba(239,68,68,0.15)', stroke: '#b91c1c', text: 'var(--ink)' };
+      if (completedSet.has(node.id)) return { fill: 'rgba(96,165,250,0.15)', stroke: '#3b82f6', text: 'var(--ink)' };
       return { fill: '#1a1a1a', stroke: '#444', text: '#9ca3af' };
     }
-    if (node.id === active) return { fill: 'rgba(250,204,21,0.3)', stroke: '#facc15', text: '#fde047' };
-    if (node.hit) return { fill: 'rgba(168,85,247,0.2)', stroke: '#a855f7', text: '#c084fc' };
-    if (completedSet.has(node.id)) return { fill: 'rgba(74,222,128,0.15)', stroke: '#22c55e', text: '#86efac' };
+    if (node.id === active) return { fill: 'rgba(250,204,21,0.3)', stroke: '#facc15', text: 'var(--ink)' };
+    if (node.hit) return { fill: 'rgba(168,85,247,0.2)', stroke: '#a855f7', text: 'var(--ink)' };
+    if (completedSet.has(node.id)) return { fill: 'rgba(74,222,128,0.15)', stroke: '#22c55e', text: 'var(--ink)' };
     return { fill: '#1a1a1a', stroke: '#444', text: '#9ca3af' };
   }
   function renderNode(node: MNode) {
@@ -246,11 +247,11 @@ function TreeSvg({ root, phase, completed, active, width, height }: {
           <line key={`e${node.id}-${ch.id}`} x1={node.px} y1={node.py} x2={ch.px} y2={ch.py} stroke="#3a3a3a" strokeWidth="1" />
         ))}
         <circle cx={node.px} cy={node.py} r={15} fill={c.fill} stroke={c.stroke} strokeWidth="1.5" />
-        <text x={node.px} y={node.py + 1} textAnchor="middle" dominantBaseline="middle" fontSize="10" fontFamily="monospace" fill={c.text}>
+        <text x={node.px} y={node.py + 1} textAnchor="middle" dominantBaseline="middle" fontSize="10" fontFamily="monospace" style={{ fill: c.text }}>
           f{node.k}
         </text>
         {showValue && (
-          <text x={node.px} y={node.py + 26} textAnchor="middle" fontSize="9" fontFamily="monospace" fill={node.hit ? '#c084fc' : '#86efac'}>
+          <text x={node.px} y={node.py + 26} textAnchor="middle" fontSize="9" fontFamily="monospace" style={{ fill: node.hit ? 'var(--brand)' : 'var(--ok)' }}>
             ={node.value}{node.hit ? '✓' : ''}
           </text>
         )}

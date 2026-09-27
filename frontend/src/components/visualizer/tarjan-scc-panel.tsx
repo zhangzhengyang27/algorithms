@@ -270,10 +270,10 @@ export function TarjanSCCPanel() {
                       stroke={isCurrent ? '#facc15' : scc >= 0 ? SCC_COLORS[scc % SCC_COLORS.length] : '#555'}
                       strokeWidth={isCurrent ? 3 : 1.5}
                     />
-                    <text x={x} y={y + 4} textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff">
+                    <text x={x} y={y + 4} textAnchor="middle" fontSize="13" fontWeight="bold" style={{ fill: 'var(--ink)' }}>
                       {i}
                     </text>
-                    <text x={x} y={y + 34} textAnchor="middle" fontSize="9" fill="#9ca3af" fontFamily="monospace">
+                    <text x={x} y={y + 34} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-3)' }} fontFamily="monospace">
                       {state.dfn[i] > 0 ? `${state.dfn[i]}/${state.low[i]}` : '-/-'}
                     </text>
                   </g>

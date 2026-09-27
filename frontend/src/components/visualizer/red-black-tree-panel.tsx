@@ -265,7 +265,7 @@ export function RedBlackTreePanel() {
                               'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium border-2 transition-all',
                               n.red
                                 ? 'bg-red-600/80 border-red-400 text-white'
-                                : 'bg-gray-900 border-gray-500 text-gray-200',
+                                : 'bg-gray-900 border-gray-500 text-white',
                               isHighlight && 'ring-2 ring-yellow-400 scale-110',
                               isInserted && 'ring-2 ring-blue-400 scale-110',
                             )}

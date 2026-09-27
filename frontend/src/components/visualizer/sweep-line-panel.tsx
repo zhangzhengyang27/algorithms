@@ -187,13 +187,13 @@ export function SweepLinePanel() {
 
           <svg viewBox="0 0 420 320" className="w-full max-w-xl mx-auto">
             {/* axes */}
-            <line x1={PX(0)} y1={PY(0)} x2={PX(8)} y2={PY(0)} stroke="#444" strokeWidth="1" />
-            <line x1={PX(0)} y1={PY(0)} x2={PX(0)} y2={PY(7)} stroke="#444" strokeWidth="1" />
+            <line x1={PX(0)} y1={PY(0)} x2={PX(8)} y2={PY(0)} style={{ stroke: 'var(--edge-2)' }} strokeWidth="1" />
+            <line x1={PX(0)} y1={PY(0)} x2={PX(0)} y2={PY(7)} style={{ stroke: 'var(--edge-2)' }} strokeWidth="1" />
             {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((x) => (
-              <text key={`x${x}`} x={PX(x)} y={PY(0) + 14} textAnchor="middle" fontSize="9" fill="#666">{x}</text>
+              <text key={`x${x}`} x={PX(x)} y={PY(0) + 14} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-3)' }}>{x}</text>
             ))}
             {[1, 2, 3, 4, 5, 6, 7].map((y) => (
-              <text key={`y${y}`} x={PX(0) - 8} y={PY(y) + 3} textAnchor="end" fontSize="9" fill="#666">{y}</text>
+              <text key={`y${y}`} x={PX(0) - 8} y={PY(y) + 3} textAnchor="end" fontSize="9" style={{ fill: 'var(--ink-3)' }}>{y}</text>
             ))}
 
             {/* swept area strips */}

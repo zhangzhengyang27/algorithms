@@ -28,7 +28,7 @@
   --edge-2: #2c2f36;
   --ink: #eceef1;
   --ink-2: #9ba1ab;
-  --ink-3: #5d636d;
+  --ink-3: #7b828c;
   --brand: #4f8ff7;
   --brand-soft: rgba(79, 143, 247, 0.09);
   --on-brand: #ffffff;
@@ -69,16 +69,65 @@
   --edge-2: #cdd1d9;
   --ink: #101216;
   --ink-2: #4c525c;
-  --ink-3: #8b919b;
+  --ink-3: #646b76;
   --brand: #2563eb;
   --brand-soft: rgba(37, 99, 235, 0.06);
   --on-brand: #ffffff;
-  --ok: #059669;
+  --ok: #047857;
   --warn: #b45309;
   --err: #dc2626;
   --grid-dot: rgba(0, 0, 0, 0.045);
   --glow: rgba(37, 99, 235, 0.05);
 }
+
+/* ─── 浅色主题下的调色板回压 ───
+   面板里有 1600 处写死的暗色系文本类（text-blue-200 / text-gray-400 等，为深底设计），
+   白底上对比度只有 1.1–2.4:1。这里按色相统一压到 700 阶（≥4.5:1），
+   比逐文件改类名安全得多：暗色主题一行都不受影响，且新增面板自动继承。
+   注意：`.light .x` 的特异性 (0,2,0) 高于 Tailwind 的 `.x` (0,1,0)，无需在意顺序。
+   字面色用十六进制而不是 var(--color-blue-700)——Tailwind 只输出被用到的主题变量，
+   直接引 var() 有取不到的风险。 */
+.light .text-gray-100,
+.light .text-gray-200,
+.light .text-gray-300 { color: #4c525c; }
+.light .text-gray-400,
+.light .text-gray-500 { color: #646b76; }
+.light .text-blue-100, .light .text-blue-200, .light .text-blue-300,
+.light .text-blue-400, .light .text-blue-500 { color: #1d4ed8; }
+.light .text-green-100, .light .text-green-200, .light .text-green-300,
+.light .text-green-400, .light .text-green-500 { color: #15803d; }
+.light .text-yellow-100, .light .text-yellow-200, .light .text-yellow-300,
+.light .text-yellow-400, .light .text-yellow-500 { color: #a16207; }
+.light .text-red-100, .light .text-red-200, .light .text-red-300,
+.light .text-red-400, .light .text-red-500 { color: #b91c1c; }
+.light .text-purple-100, .light .text-purple-200, .light .text-purple-300,
+.light .text-purple-400, .light .text-purple-500 { color: #7e22ce; }
+.light .text-orange-100, .light .text-orange-200, .light .text-orange-300,
+.light .text-orange-400, .light .text-orange-500 { color: #c2410c; }
+.light .text-amber-100, .light .text-amber-200, .light .text-amber-300,
+.light .text-amber-400, .light .text-amber-500 { color: #b45309; }
+.light .text-emerald-100, .light .text-emerald-200, .light .text-emerald-300,
+.light .text-emerald-400, .light .text-emerald-500 { color: #047857; }
+.light .text-teal-100, .light .text-teal-200, .light .text-teal-300,
+.light .text-teal-400, .light .text-teal-500 { color: #0f766e; }
+.light .text-cyan-100, .light .text-cyan-200, .light .text-cyan-300,
+.light .text-cyan-400, .light .text-cyan-500 { color: #0e7490; }
+.light .text-sky-100, .light .text-sky-200, .light .text-sky-300,
+.light .text-sky-400, .light .text-sky-500 { color: #0369a1; }
+.light .text-indigo-100, .light .text-indigo-200, .light .text-indigo-300,
+.light .text-indigo-400, .light .text-indigo-500 { color: #4338ca; }
+.light .text-violet-100, .light .text-violet-200, .light .text-violet-300,
+.light .text-violet-400, .light .text-violet-500 { color: #6d28d9; }
+.light .text-pink-100, .light .text-pink-200, .light .text-pink-300,
+.light .text-pink-400, .light .text-pink-500 { color: #be185d; }
+.light .text-rose-100, .light .text-rose-200, .light .text-rose-300,
+.light .text-rose-400, .light .text-rose-500 { color: #be123c; }
+.light .text-fuchsia-100, .light .text-fuchsia-200, .light .text-fuchsia-300,
+.light .text-fuchsia-400, .light .text-fuchsia-500 { color: #a21caf; }
+
+/* highlight.js 的 github 主题里 built_in（TS 的 number/boolean 等）只有 3.49:1，压深一档。
+   运行时插入的 <link id="hljs-theme"> 排在样式表之后，所以这里必须靠特异性压制 */
+.light .hljs-built_in { color: #9a3412; }
 
 * {
   border-color: var(--edge);

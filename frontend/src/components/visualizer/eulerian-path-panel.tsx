@@ -166,7 +166,7 @@ export function EulerianPathPanel() {
                       strokeWidth={2}
                     />
                     <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="13" fontWeight="bold"
-                      fill={isTop ? '#fde047' : inStack ? '#93c5fd' : '#9ca3af'}>{i}</text>
+                      style={{ fill: isTop || inStack ? 'var(--ink)' : '#9ca3af' }}>{i}</text>
                   </g>
                 );
               })}

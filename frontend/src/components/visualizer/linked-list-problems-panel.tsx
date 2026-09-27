@@ -235,9 +235,9 @@ function CycleListSVG({ state }: { state: LLState }) {
 
   const labelsAt = (i: number) => {
     const ls: { t: string; c: string }[] = [];
-    if (state.slow === i) ls.push({ t: 'slow', c: '#4ade80' });
-    if (state.phase === 'cycle' && state.fast === i) ls.push({ t: 'fast', c: '#f87171' });
-    if (state.phase === 'entry' && state.p === i) ls.push({ t: 'p', c: '#c084fc' });
+    if (state.slow === i) ls.push({ t: 'slow', c: 'var(--ok)' });
+    if (state.phase === 'cycle' && state.fast === i) ls.push({ t: 'fast', c: 'var(--err)' });
+    if (state.phase === 'entry' && state.p === i) ls.push({ t: 'p', c: 'var(--ink-2)' });
     return ls;
   };
 
@@ -245,10 +245,10 @@ function CycleListSVG({ state }: { state: LLState }) {
     <svg viewBox={`0 0 ${width} 138`} className="w-full max-w-[440px] bg-bg rounded-lg border border-edge">
       <defs>
         <marker id="ll-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6 Z" fill="#666" />
+          <path d="M0,0 L6,3 L0,6 Z" style={{ fill: 'var(--ink-3)' }} />
         </marker>
         <marker id="ll-arrow-cycle" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6 Z" fill="#f59e0b" />
+          <path d="M0,0 L6,3 L0,6 Z" style={{ fill: 'var(--warn)' }} />
         </marker>
       </defs>
 
@@ -261,7 +261,7 @@ function CycleListSVG({ state }: { state: LLState }) {
             y1={y0 + nodeH / 2}
             x2={x0 + (i + 1) * (nodeW + gap) - 5}
             y2={y0 + nodeH / 2}
-            stroke="#666"
+            style={{ stroke: 'var(--ink-3)' }}
             strokeWidth={1.5}
             markerEnd="url(#ll-arrow)"
           />
@@ -272,12 +272,12 @@ function CycleListSVG({ state }: { state: LLState }) {
       <path
         d={`M ${cx(n - 1)} ${y0 + nodeH} C ${cx(n - 1)} ${y0 + nodeH + 46}, ${cx(state.cycleAt)} ${y0 + nodeH + 46}, ${cx(state.cycleAt)} ${y0 + nodeH + 6}`}
         fill="none"
-        stroke="#f59e0b"
+        style={{ stroke: 'var(--warn)' }}
         strokeWidth={1.5}
         strokeDasharray="5 3"
         markerEnd="url(#ll-arrow-cycle)"
       />
-      <text x={(cx(n - 1) + cx(state.cycleAt)) / 2} y={y0 + nodeH + 42} textAnchor="middle" fontSize={9} fill="#f59e0b">
+      <text x={(cx(n - 1) + cx(state.cycleAt)) / 2} y={y0 + nodeH + 42} textAnchor="middle" fontSize={9} style={{ fill: 'var(--warn)' }}>
         环
       </text>
 
@@ -302,7 +302,7 @@ function CycleListSVG({ state }: { state: LLState }) {
               {v}
             </text>
             {ls.map((l, li) => (
-              <text key={l.t} x={cx(i)} y={14 + li * 13} textAnchor="middle" fontSize={10} fontWeight={700} fill={l.c}>
+              <text key={l.t} x={cx(i)} y={14 + li * 13} textAnchor="middle" fontSize={10} fontWeight={700} style={{ fill: l.c }}>
                 {l.t}
               </text>
             ))}

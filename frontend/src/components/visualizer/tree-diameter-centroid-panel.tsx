@@ -264,7 +264,7 @@ export function TreeDiameterCentroidPanel() {
                 <g key={u}>
                   <circle cx={cx} cy={cy} r={R} fill={c.fill} stroke={c.stroke} strokeWidth={2} />
                   <text x={cx} y={cy + 4} textAnchor="middle" fontSize="12" fontWeight="bold" fill={c.text}>{u}</text>
-                  <text x={cx} y={cy + R + 13} textAnchor="middle" fontSize="9" fill="#9ca3af">{label(u, state)}</text>
+                  <text x={cx} y={cy + R + 13} textAnchor="middle" fontSize="9" style={{ fill: 'var(--ink-3)' }}>{label(u, state)}</text>
                 </g>
               );
             })}

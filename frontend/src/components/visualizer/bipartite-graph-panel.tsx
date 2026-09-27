@@ -213,8 +213,8 @@ export function BipartiteGraphPanel() {
             </div>
 
             <svg viewBox="0 0 420 300" className="w-full max-w-md mx-auto">
-              <text x={80} y={20} textAnchor="middle" fontSize="11" fill="#6b7280">左集</text>
-              <text x={340} y={20} textAnchor="middle" fontSize="11" fill="#6b7280">右集</text>
+              <text x={80} y={20} textAnchor="middle" fontSize="11" style={{ fill: 'var(--ink-3)' }}>左集</text>
+              <text x={340} y={20} textAnchor="middle" fontSize="11" style={{ fill: 'var(--ink-3)' }}>右集</text>
               {state.edges.map(([u, v], i) => {
                 const a = NODE_POS[u], b = NODE_POS[v];
                 const key = `${u}-${v}`;
