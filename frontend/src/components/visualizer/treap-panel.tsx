@@ -34,7 +34,7 @@ function cloneNodes(nodes: TreapNode[]): TreapNode[] {
   return nodes.map((n) => ({ ...n }));
 }
 
-function buildSteps(values: number[]): VizStep<TreapState>[] {
+export function buildSteps(values: number[]): VizStep<TreapState>[] {
   const steps: VizStep<TreapState>[] = [];
   let nodes: TreapNode[] = [];
   let parent: number[] = []; // 辅助：节点 -> 父索引，-1 表示根

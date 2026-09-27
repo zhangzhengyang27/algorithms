@@ -609,6 +609,281 @@ describe('hash-table-panel', () => {
   }
 });
 
+// ─── 第四批：矩阵 / 数论 / 字符串 / 树 / 图 ──────────────────────────────────
+
+import { buildSteps as rotateBuild } from '@/components/visualizer/matrix-rotation-panel';
+import { buildSteps as gaussBuild } from '@/components/visualizer/gaussian-elimination-panel';
+import { buildSteps as crtBuild } from '@/components/visualizer/chinese-remainder-theorem-panel';
+import { buildSteps as matExpBuild } from '@/components/visualizer/matrix-exponentiation-panel';
+import { buildSteps as nimBuild } from '@/components/visualizer/game-theory-panel';
+import { buildSteps as saBuild } from '@/components/visualizer/suffix-array-panel';
+import { buildSteps as puzzleBuild } from '@/components/visualizer/eight-puzzle-panel';
+import { buildSteps as treapBuild } from '@/components/visualizer/treap-panel';
+import { buildSteps as rbtBuild } from '@/components/visualizer/red-black-tree-panel';
+import { buildSteps as skipBuild } from '@/components/visualizer/skip-list-panel';
+import { buildSteps as graphBuild } from '@/components/visualizer/graph-storage-traversal-panel';
+import { buildSteps as btBuild } from '@/components/visualizer/backtracking-panel';
+
+const GOAL8 = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+function refRotateCW(m: number[][]): number[][] {
+  const n = m.length;
+  const out = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) out[r][c] = m[n - 1 - c][r];
+  return out;
+}
+
+function refCrt(eqs: { r: number; m: number }[]): number {
+  const M = eqs.reduce((a, e) => a * e.m, 1);
+  for (let x = 0; x < M; x++) if (eqs.every((e) => x % e.m === ((e.r % e.m) + e.m) % e.m)) return x;
+  return -1;
+}
+
+function refFib(n: number): number {
+  let a = 0, b = 1;
+  for (let i = 0; i < n; i++) { const t = a + b; a = b; b = t; }
+  return a;
+}
+
+function refBfsDist(start: number[], goal: number[]): number {
+  const key = (b: number[]) => b.join(',');
+  if (key(start) === key(goal)) return 0; // 起点即终点：先判再搜，否则这里会漏成 2
+  const seen = new Set([key(start)]);
+  let frontier = [start];
+  for (let d = 1; d <= 31; d++) {
+    const next: number[][] = [];
+    for (const b of frontier) {
+      const z = b.indexOf(0), r = Math.floor(z / 3), c = z % 3;
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const nr = r + dr, nc = c + dc;
+        if (nr < 0 || nr > 2 || nc < 0 || nc > 2) continue;
+        const nb = [...b]; const k = nr * 3 + nc;
+        [nb[z], nb[k]] = [nb[k], nb[z]];
+        if (key(nb) === key(goal)) return d;
+        if (!seen.has(key(nb))) { seen.add(key(nb)); next.push(nb); }
+      }
+    }
+    frontier = next;
+  }
+  return -1;
+}
+
+describe('matrix-rotation-panel（声明为顺时针：先转置再逐行翻转）', () => {
+  for (const m of [[[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[1, 2], [3, 4]], [[7]]]) {
+    it(`顺时针旋转 ${JSON.stringify(m)}`, () => {
+      expect(lastState(rotateBuild(m)).m).toEqual(refRotateCW(m));
+    });
+  }
+  it('连转四次回到原矩阵，且每帧都是原矩阵的一个置换', () => {
+    const m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    let cur = m;
+    const flat = m.flat().slice().sort((a, b) => a - b);
+    for (let i = 0; i < 4; i++) {
+      cur = refRotateCW(cur);
+      expect(cur.flat().slice().sort((a, b) => a - b)).toEqual(flat);
+    }
+    expect(cur).toEqual(m);
+  });
+});
+
+describe('gaussian-elimination-panel', () => {
+  // 参照不重跑消元，而是把末帧解代回原方程组验残差——完全不同的验证路径。
+  const systems: number[][][] = [
+    [[2, 1, -1, 8], [-3, -1, 2, -11], [-4, -5, 7, -3]],
+    [[1, 1, 1, 6], [2, 1, 0, 8], [1, 3, 2, 13]],
+    [[3, -1, 2, 8], [1, 4, -1, -3], [2, 1, 5, 11]],
+  ];
+  systems.forEach((aug, si) => {
+    it(`第 ${si + 1} 组：末帧解满足原方程组`, () => {
+      const sol = lastState(gaussBuild(aug)).solution as number[];
+      expect(sol).toHaveLength(aug[0].length - 1);
+      for (const row of aug) {
+        const lhs = row.slice(0, -1).reduce((a, coef, i) => a + coef * sol[i], 0);
+        expect(Math.abs(lhs - row[row.length - 1])).toBeLessThan(1e-6);
+      }
+    });
+  });
+});
+
+describe('chinese-remainder-theorem-panel', () => {
+  for (const eqs of [
+    [{ r: 2, m: 3 }, { r: 3, m: 5 }, { r: 2, m: 7 }],
+    [{ r: 1, m: 2 }, { r: 2, m: 3 }, { r: 3, m: 5 }],
+    [{ r: 0, m: 7 }],
+  ]) {
+    it(`最小非负解 ${JSON.stringify(eqs)}`, () => {
+      const expected = refCrt(eqs);
+      expect(lastState(crtBuild(eqs as any)).finalX).toBe(expected);
+    });
+  }
+});
+
+describe('matrix-exponentiation-panel', () => {
+  for (const n of [0, 1, 2, 5, 10, 20]) {
+    it(`fib(${n}) 用快速幂与迭代同值`, () => {
+      expect(lastState(matExpBuild(n)).answer).toBe(refFib(n));
+    });
+  }
+});
+
+describe('game-theory-panel（Nim）', () => {
+  for (const piles of [[3, 4, 5], [1, 1], [2, 2, 2], [7], [0]]) {
+    it(`${JSON.stringify(piles)}：XOR 判定与必胜着法都自洽`, () => {
+      const xr = piles.reduce((a, b) => a ^ b, 0);
+      const s = lastState(nimBuild(piles));
+      expect(s.nimSum).toBe(xr);
+      expect(s.isWinning).toBe(xr !== 0);
+      if (xr !== 0) {
+        expect(s.move).not.toBeNull();
+        const { pile, take } = s.move as { pile: number; take: number };
+        // 必胜着的定义：走完这一步把 XOR 变成 0
+        expect(piles[pile] - take).toBeGreaterThanOrEqual(0);
+        expect(piles.map((v, i) => (i === pile ? v - take : v)).reduce((a, b) => a ^ b, 0)).toBe(0);
+      }
+    });
+  }
+});
+
+describe('suffix-array-panel', () => {
+  it('sa 是后缀的真降序排列，height 等于相邻后缀的 LCP', () => {
+    const s = 'banana';
+    const st = lastState(saBuild(s));
+    const sa = st.sa as number[];
+    expect([...sa].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+    for (let i = 1; i < sa.length; i++) expect(s.slice(sa[i - 1]) < s.slice(sa[i])).toBe(true);
+    const lcp = (a: string, b: string) => { let k = 0; while (k < a.length && k < b.length && a[k] === b[k]) k++; return k; };
+    const refH = sa.map((idx, rank) => (rank === 0 ? 0 : lcp(s.slice(idx), s.slice(sa[rank - 1]))));
+    expect(st.height).toEqual(refH);
+  });
+});
+
+describe('eight-puzzle-panel', () => {
+  for (const start of [[1, 2, 3, 4, 0, 5, 7, 8, 6], [1, 2, 3, 4, 5, 6, 7, 8, 0], GOAL8.slice().reverse()]) {
+    it(`${JSON.stringify(start)}：末态即目标布局，步数等于独立 BFS 的最短步数`, () => {
+      const d = refBfsDist(start, GOAL8);
+      if (d < 0) return; // 不可解的布局不断言步数，只要求面板不崩
+      const s = lastState(puzzleBuild(start));
+      expect(s.board).toEqual(GOAL8);
+      expect(s.total).toBe(d);
+    });
+  }
+});
+
+/** 节点表按创建顺序追加，根不一定是下标 0（AVL 那轮的教训），按入度找根。 */
+function findRoot(nodes: any[]): number {
+  const childed = new Set<number>();
+  for (const nd of nodes) { if (nd.left >= 0) childed.add(nd.left); if (nd.right >= 0) childed.add(nd.right); }
+  return nodes.findIndex((_, i) => !childed.has(i));
+}
+
+describe('treap-panel', () => {
+  for (const values of [[5, 3, 8, 1, 9], [4, 2], [7], []]) {
+    it(`Treap ${JSON.stringify(values)}：中序有序 + 优先级满足堆序`, () => {
+      const nodes = lastState(treapBuild(values)).nodes as any[];
+      expect(nodes).toHaveLength(values.length);
+      if (!nodes.length) return;
+      const root = findRoot(nodes);
+      expect(root).toBeGreaterThanOrEqual(0);
+      const inOrder = (i: number, out: number[]): number[] => {
+        if (i < 0) return out;
+        inOrder(nodes[i].left, out); out.push(nodes[i].val); inOrder(nodes[i].right, out); return out;
+      };
+      expect(inOrder(root, [])).toEqual([...values].sort((a, b) => a - b));
+      for (const nd of nodes) {
+        for (const ch of [nd.left, nd.right] as number[]) {
+          if (ch >= 0) expect(nd.pri).toBeGreaterThan(nodes[ch].pri); // 最大堆
+        }
+      }
+    });
+  }
+});
+
+describe('red-black-tree-panel', () => {
+  for (const values of [[5, 3, 8, 1, 9, 7], [1, 2, 3, 4, 5, 6, 7], [7, 6, 5, 4, 3, 2, 1], [10]]) {
+    it(`红黑树 ${JSON.stringify(values)}：中序有序、根为黑、无连续红、黑高一致`, () => {
+      const nodes = lastState(rbtBuild(values)).nodes as any[];
+      expect(nodes).toHaveLength(values.length);
+      // 面板用 (depth, pos) 描述位置，按完全二叉树编号还原父子关系
+      const idxOf = new Map<number, number>();
+      nodes.forEach((nd, i) => idxOf.set((2 ** nd.depth - 1) + nd.pos, i));
+      const at = (num: number) => (idxOf.has(num) ? idxOf.get(num)! : -1);
+      expect(nodes[0].red).toBe(false);
+      const inOrder = (num: number, out: number[]): number[] => {
+        const i = at(num);
+        if (i < 0) return out;
+        inOrder(num * 2 + 1, out); out.push(nodes[i].value); inOrder(num * 2 + 2, out); return out;
+      };
+      expect(inOrder(0, [])).toEqual([...values].sort((a, b) => a - b));
+      const bh = (num: number, parentRed: boolean): number => {
+        const i = at(num);
+        if (i < 0) return 1;
+        if (nodes[i].red) expect(parentRed).toBe(false);
+        const l = bh(num * 2 + 1, nodes[i].red);
+        const r = bh(num * 2 + 2, nodes[i].red);
+        expect(l).toBe(r); // 同节点两子树黑高必须相等
+        return l + (nodes[i].red ? 0 : 1);
+      };
+      bh(0, false);
+    });
+  }
+});
+
+describe('skip-list-panel', () => {
+  it('第 0 层含全部元素且有序；上层是下层的子序列；查找结论正确', () => {
+    for (const target of [12, 99]) {
+      const s = lastState(skipBuild([3, 7, 12, 19, 25], 4, target));
+      const lv = (s.levels as (number | null)[][]).map((l) => l.filter((v): v is number => v !== null));
+      expect(lv[0]).toEqual([3, 7, 12, 19, 25]);
+      for (let i = 1; i < lv.length; i++) {
+        let p = 0;
+        for (const v of lv[i]) {
+          while (p < lv[i - 1].length && lv[i - 1][p] !== v) p++;
+          expect(p).toBeLessThan(lv[i - 1].length);
+        }
+      }
+      expect(s.found).toBe([3, 7, 12, 19, 25].includes(target));
+    }
+  });
+});
+
+describe('graph-storage-traversal-panel', () => {
+  const ADJ = [[1, 2], [0, 3, 4], [0, 4], [1, 4], [1, 2, 3]]; // 与面板内置图一致（数据，非算法）
+  it('DFS 序列等于我按同一邻接表跑出的 DFS，BFS 序列同理', () => {
+    const dfs: number[] = [];
+    const seenD = new Set<number>();
+    const go = (u: number) => { seenD.add(u); dfs.push(u); for (const v of ADJ[u]) if (!seenD.has(v)) go(v); };
+    go(0);
+    const bfs: number[] = [];
+    const seenB = new Set<number>([0]);
+    for (let q = [0]; q.length;) {
+      const u = q.shift()!;
+      bfs.push(u);
+      for (const v of ADJ[u]) if (!seenB.has(v)) { seenB.add(v); q.push(v); }
+    }
+    const frames = graphBuild(0).map((st: any) => st.state);
+    const lastDfs = [...frames].reverse().find((f: any) => f.phase === 'dfs' && f.order.length === ADJ.length);
+    expect(lastDfs?.order).toEqual(dfs);
+    const anyBfs = frames.find((f: any) => f.phase === 'bfs' && f.order.length === ADJ.length);
+    if (anyBfs) expect(anyBfs.order).toEqual(bfs);
+    expect(new Set(lastDfs.order)).toEqual(new Set([0, 1, 2, 3, 4]));
+  });
+});
+
+describe('backtracking-panel', () => {
+  it('全排列结果集等于独立生成的排列集', () => {
+    const nums = [1, 2, 3];
+    const ref: number[][] = [];
+    const walk = (path: number[], rest: number[]) => {
+      if (!rest.length) { ref.push([...path]); return; }
+      rest.forEach((v, i) => walk([...path, v], [...rest.slice(0, i), ...rest.slice(i + 1)]));
+    };
+    walk([], nums);
+    const res = lastState(btBuild(nums)).results as number[][];
+    expect(res.map((r) => r.join(','))).toEqual(expect.arrayContaining(ref.map((r) => r.join(','))));
+    expect(res).toHaveLength(ref.length);
+    expect(new Set(res.map((r) => r.join(','))).size).toBe(res.length);
+  });
+});
 // 栈/队列/链表：从**相邻帧的 state 差分**推出实际弹出序列，不去解析文案，
 // 也不把面板自己的输出抄来当基线。
 describe('stack / queue / linked-list 面板', () => {

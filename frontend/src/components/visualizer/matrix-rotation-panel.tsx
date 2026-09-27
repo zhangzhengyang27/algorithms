@@ -19,7 +19,7 @@ interface MatrixRotationState {
   message: string;
 }
 
-function buildSteps(initial: number[][]): VizStep<MatrixRotationState>[] {
+export function buildSteps(initial: number[][]): VizStep<MatrixRotationState>[] {
   const steps: VizStep<MatrixRotationState>[] = [];
   const n = initial.length;
   const m = initial.map((r) => [...r]);

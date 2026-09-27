@@ -67,7 +67,13 @@ function rotateLeft(root: RBNode, x: RBNode): RBNode {
   x.right = y.left;
   if (y.left) y.left.parent = x;
   y.parent = x.parent;
-  if (!x.parent) return y;
+  if (!x.parent) {
+    // 旋转的是根：仍必须把旧根 x 挂回 y.left，否则 x 连同它整个左子树
+    // 会从树中消失（升序插入时每次左旋都丢一棵子树，7 个值最终只剩 2 个节点）。
+    y.left = x;
+    x.parent = y;
+    return y;
+  }
   if (x === x.parent.left) x.parent.left = y;
   else x.parent.right = y;
   y.left = x;
@@ -80,7 +86,12 @@ function rotateRight(root: RBNode, y: RBNode): RBNode {
   y.left = x.right;
   if (x.right) x.right.parent = y;
   x.parent = y.parent;
-  if (!y.parent) return x;
+  if (!y.parent) {
+    // 同 rotateLeft：根右旋时也要把旧根挂回 x.right
+    x.right = y;
+    y.parent = x;
+    return x;
+  }
   if (y === y.parent.left) y.parent.left = x;
   else y.parent.right = x;
   x.right = y;
@@ -103,7 +114,7 @@ function bstInsert(root: RBNode | null, value: number): { root: RBNode; node: RB
   return { root, node: z };
 }
 
-function buildSteps(values: number[]): VizStep<RBTState>[] {
+export function buildSteps(values: number[]): VizStep<RBTState>[] {
   const steps: VizStep<RBTState>[] = [];
   let root: RBNode | null = null;
 

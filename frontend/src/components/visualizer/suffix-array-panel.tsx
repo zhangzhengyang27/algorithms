@@ -49,7 +49,7 @@ interface SAState {
   message: string;
 }
 
-function buildSteps(s: string): VizStep<SAState>[] {
+export function buildSteps(s: string): VizStep<SAState>[] {
   const steps: VizStep<SAState>[] = [];
   const n = s.length;
   let rank = [...s].map((c) => c.charCodeAt(0));

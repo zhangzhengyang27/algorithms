@@ -64,7 +64,7 @@ function matMulWithCellSteps(A: Matrix, B: Matrix) {
   return { C, cells };
 }
 
-function buildSteps(nInput: number): VizStep<MatExpState>[] {
+export function buildSteps(nInput: number): VizStep<MatExpState>[] {
   const steps: VizStep<MatExpState>[] = [];
   let n = nInput;
   let result: Matrix = [[1, 0], [0, 1]];

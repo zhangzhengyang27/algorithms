@@ -46,7 +46,7 @@ function modInverse(a: number, m: number): number {
   return -1;
 }
 
-function buildSteps(equations: Equation[]): VizStep<CrtState>[] {
+export function buildSteps(equations: Equation[]): VizStep<CrtState>[] {
   const steps: VizStep<CrtState>[] = [];
   const n = equations.length;
   const MiValues: (number | null)[] = new Array(n).fill(null);

@@ -32,7 +32,7 @@ interface BacktrackState {
   message: string;
 }
 
-function buildSteps(nums: number[]): VizStep<BacktrackState>[] {
+export function buildSteps(nums: number[]): VizStep<BacktrackState>[] {
   const steps: VizStep<BacktrackState>[] = [];
   const n = nums.length;
   const used = Array(n).fill(false);

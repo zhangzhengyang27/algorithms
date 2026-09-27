@@ -82,7 +82,7 @@ function solvePath(start: number[]): { path: number[][]; moves: number[] } | nul
   return null; // 不可达
 }
 
-function buildSteps(start: number[]): VizStep<PuzzleState>[] {
+export function buildSteps(start: number[]): VizStep<PuzzleState>[] {
   const res = solvePath(start);
   if (!res) {
     return [{

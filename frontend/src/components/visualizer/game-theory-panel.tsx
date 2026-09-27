@@ -41,7 +41,7 @@ interface NimState {
   message: string;
 }
 
-function buildSteps(piles: number[]): VizStep<NimState>[] {
+export function buildSteps(piles: number[]): VizStep<NimState>[] {
   const steps: VizStep<NimState>[] = [];
   const bits = Math.max(3, Math.ceil(Math.log2(Math.max(...piles) + 1)));
   let xorSoFar = 0;

@@ -45,7 +45,7 @@ interface GaussState {
   message: string;
 }
 
-function buildSteps(input: number[][]): VizStep<GaussState>[] {
+export function buildSteps(input: number[][]): VizStep<GaussState>[] {
   const steps: VizStep<GaussState>[] = [];
   const aug = input.map((r) => [...r]);
   const n = aug.length;

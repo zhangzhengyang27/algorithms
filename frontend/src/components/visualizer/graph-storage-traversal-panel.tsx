@@ -60,7 +60,7 @@ function snap(
   return { phase, builtEdges, visited: [...visited], queue: [...queue], stack: [...stack], order: [...order], current, activeEdge, message };
 }
 
-function buildSteps(start: number): VizStep<GraphState>[] {
+export function buildSteps(start: number): VizStep<GraphState>[] {
   const steps: VizStep<GraphState>[] = [];
   const empty = new Set<number>();
 

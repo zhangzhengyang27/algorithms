@@ -65,7 +65,7 @@ function levelFor(order: number, maxLevel: number): number {
   return lvl;
 }
 
-function buildSteps(values: number[], maxLevel: number, target: number): VizStep<SkipListState>[] {
+export function buildSteps(values: number[], maxLevel: number, target: number): VizStep<SkipListState>[] {
   const steps: VizStep<SkipListState>[] = [];
   const head: SNode = { value: null, forward: new Array(maxLevel).fill(null) };
   let order = 0;
