@@ -49,7 +49,7 @@ interface PSTState {
   message: string;
 }
 
-function buildSteps(): VizStep<PSTState>[] {
+export function buildSteps(nums: number[] = NUMS, maxV: number = MAXV, kthQuery: [number, number, number] = [1, 3, 2]): VizStep<PSTState>[] {
   const steps: VizStep<PSTState>[] = [];
   const nodes: PSTNode[] = [];
   const roots: number[] = [];
@@ -86,17 +86,17 @@ function buildSteps(): VizStep<PSTState>[] {
     return id;
   };
 
-  const r0 = build(1, MAXV);
+  const r0 = build(1, maxV);
   roots.push(r0);
   steps.push({
-    state: snap({ message: `值域 [1, ${MAXV}]，构建空线段树作为版本 0（共 ${nodes.length} 个节点，sum 全 0）` }),
+    state: snap({ message: `值域 [1, ${maxV}]，构建空线段树作为版本 0（共 ${nodes.length} 个节点，sum 全 0）` }),
     description: '版本 0',
     codeLine: 2,
   });
 
-  NUMS.forEach((x, i) => {
+  nums.forEach((x, i) => {
     const path: number[] = [];
-    const ri = update(roots[i], 1, MAXV, x, i + 1, path);
+    const ri = update(roots[i], 1, maxV, x, i + 1, path);
     roots.push(ri);
     const shared = 7 - path.length;
     steps.push({
@@ -110,7 +110,7 @@ function buildSteps(): VizStep<PSTState>[] {
   });
 
   // 查询 nums[1..3] = [1,4,2] 的第 2 小
-  const qL = 1, qR = 3, qK = 2;
+  const [qL, qR, qK] = kthQuery;
   steps.push({
     state: snap({ phase: 'query', queryL: qL, queryR: qR, queryK: qK, currentRoot: roots[qR + 1], message: `查询 nums[${qL}..${qR}] = [1,4,2] 的第 ${qK} 小：u=根v${qL}，v=根v${qR + 1}，两版本做差` }),
     description: '查询第 k 小',
@@ -138,7 +138,7 @@ function buildSteps(): VizStep<PSTState>[] {
     return query(nodes[u].r, nodes[v].r, m + 1, r, k - cnt);
   };
 
-  const ans = query(roots[qL], roots[qR + 1], 1, MAXV, qK);
+  const ans = query(roots[qL], roots[qR + 1], 1, maxV, qK);
   steps.push({
     state: snap({ phase: 'done', queryL: qL, queryR: qR, queryK: qK, currentRoot: roots[qR + 1], result: ans, message: `✅ nums[${qL}..${qR}] 排序后 [1,2,4]，第 ${qK} 小 = ${ans}。每次插入只新建 O(log n) 节点` }),
     description: '完成',

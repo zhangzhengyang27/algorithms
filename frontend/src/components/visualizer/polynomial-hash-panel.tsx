@@ -23,7 +23,7 @@ interface PolyHashState {
   message: string;
 }
 
-function buildSteps(word: string): VizStep<PolyHashState>[] {
+export function buildSteps(word: string): VizStep<PolyHashState>[] {
   const steps: VizStep<PolyHashState>[] = [];
   let h = 0;
 

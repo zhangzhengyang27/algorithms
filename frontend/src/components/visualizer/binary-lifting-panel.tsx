@@ -45,18 +45,21 @@ interface BLState {
   message: string;
 }
 
-function computeFa(): number[][] {
-  const fa = Array.from({ length: N }, () => new Array(LOG).fill(-1));
-  for (let u = 0; u < N; u++) fa[u][0] = PARENT[u];
-  for (let k = 1; k < LOG; k++)
-    for (let u = 0; u < N; u++) fa[u][k] = fa[u][k - 1] < 0 ? -1 : fa[fa[u][k - 1]][k - 1];
+function computeFa(parent: number[], n: number, log: number): number[][] {
+  const fa = Array.from({ length: n }, () => new Array(log).fill(-1));
+  for (let u = 0; u < n; u++) fa[u][0] = parent[u];
+  for (let k = 1; k < log; k++)
+    for (let u = 0; u < n; u++) fa[u][k] = fa[u][k - 1] < 0 ? -1 : fa[fa[u][k - 1]][k - 1];
   return fa;
 }
 
-function buildSteps(): VizStep<BLState>[] {
+const DEFAULT_QUERIES: [number, number][] = [[8, 9], [9, 5]];
+
+export function buildSteps(parent: number[] = PARENT, depth: number[] = DEPTH, log: number = LOG, queries: [number, number][] = DEFAULT_QUERIES): VizStep<BLState>[] {
+  const n = parent.length;
   const steps: VizStep<BLState>[] = [];
-  const full = computeFa();
-  const fa = Array.from({ length: N }, () => new Array(LOG).fill(-1));
+  const full = computeFa(parent, n, log);
+  const fa = Array.from({ length: n }, () => new Array(log).fill(-1));
 
   const snap = (over: Partial<BLState>): BLState => ({
     fa: fa.map((r) => [...r]),
@@ -72,16 +75,16 @@ function buildSteps(): VizStep<BLState>[] {
   });
 
   // k = 0
-  for (let u = 0; u < N; u++) fa[u][0] = PARENT[u];
+  for (let u = 0; u < n; u++) fa[u][0] = parent[u];
   steps.push({
     state: snap({ fillK: 0, message: 'fa[u][0] = parent[u]：每个节点的 2^0=1 级祖先就是父节点' }),
     description: '填充 k=0',
     codeLine: 2,
   });
 
-  // k = 1..LOG-1
-  for (let k = 1; k < LOG; k++) {
-    for (let u = 0; u < N; u++) fa[u][k] = full[u][k];
+  // k = 1..log-1
+  for (let k = 1; k < log; k++) {
+    for (let u = 0; u < n; u++) fa[u][k] = full[u][k];
     const example = k === 1 ? 'fa[8][1] = fa[fa[8][0]][0] = fa[6][0] = 3（跳 2 级）' : `fa[u][${k}] = fa[fa[u][${k - 1}]][${k - 1}]：先跳 2^${k - 1} 再跳 2^${k - 1}`;
     steps.push({
       state: snap({ fillK: k, message: `倍增递推：${example}` }),
@@ -100,12 +103,12 @@ function buildSteps(): VizStep<BLState>[] {
   const runQuery = (a: number, b: number) => {
     let u = a, v = b;
     steps.push({
-      state: snap({ phase: 'query', queryPair: [a, b], curU: u, curV: v, pathU: [u], pathV: [v], message: `查询 LCA(${a}, ${b})：depth[${u}]=${DEPTH[u]}，depth[${v}]=${DEPTH[v]}` }),
+      state: snap({ phase: 'query', queryPair: [a, b], curU: u, curV: v, pathU: [u], pathV: [v], message: `查询 LCA(${a}, ${b})：depth[${u}]=${depth[u]}，depth[${v}]=${depth[v]}` }),
       description: `查询 LCA(${a},${b})`,
       codeLine: 6,
     });
 
-    if (DEPTH[u] < DEPTH[v]) {
+    if (depth[u] < depth[v]) {
       [u, v] = [v, u];
       steps.push({
         state: snap({ phase: 'query', queryPair: [a, b], curU: u, curV: v, pathU: [u], pathV: [v], message: `depth[${v}] 更深，交换使 u=${u} 为较深节点` }),
@@ -114,7 +117,7 @@ function buildSteps(): VizStep<BLState>[] {
       });
     }
 
-    let d = DEPTH[u] - DEPTH[v];
+    let d = depth[u] - depth[v];
     if (d > 0) {
       steps.push({
         state: snap({ phase: 'query', queryPair: [a, b], curU: u, curV: v, pathU: [u], pathV: [v], message: `高度差 d=${d}，二进制分解为 ${d.toString(2)}₂，逐位上跳` }),
@@ -150,7 +153,7 @@ function buildSteps(): VizStep<BLState>[] {
       codeLine: 11,
     });
 
-    for (let k = LOG - 1; k >= 0; k--) {
+    for (let k = log - 1; k >= 0; k--) {
       const fu = full[u][k], fv = full[v][k];
       if (fu !== fv) {
         u = fu; v = fv;
@@ -177,8 +180,7 @@ function buildSteps(): VizStep<BLState>[] {
     });
   };
 
-  runQuery(8, 9);
-  runQuery(9, 5);
+  for (const [qa, qb] of queries) runQuery(qa, qb);
 
   return steps;
 }

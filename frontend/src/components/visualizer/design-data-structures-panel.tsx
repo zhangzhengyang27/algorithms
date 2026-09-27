@@ -41,7 +41,7 @@ interface CQState {
 
 type Op = { type: 'enq'; value: number } | { type: 'deq' };
 
-function buildSteps(capacity: number, ops: Op[]): VizStep<CQState>[] {
+export function buildSteps(capacity: number, ops: Op[]): VizStep<CQState>[] {
   const steps: VizStep<CQState>[] = [];
   const arr: (number | null)[] = new Array(capacity).fill(null);
   let front = 0;

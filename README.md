@@ -92,7 +92,7 @@ algorithms/
 │   └── src/
 │       ├── app/         # 页面路由：tutorials(137 篇 .md + 动态路由) · visualizer(127 页)
 │       │               # problems · progress · wrong-book · study-plan · roadmap · stats · login · settings
-│       ├── components/  # visualizer(126 个 *-panel + stepper 引擎) · tutorial · problem · editor · ui …
+│       ├── components/  # visualizer(127 个 *-panel*.tsx = 126 个面板 + code-panel 共享组件；stepper 是引擎) · tutorial · problem · editor · ui …
 │       ├── lib/         # algorithms/ · java-tracer · python-tracer · solution-tracer · api / api-client
 │       └── store/       # Zustand 状态
 ├── backend/             # NestJS 11 后端
@@ -107,7 +107,7 @@ algorithms/
 ## 内容规模
 
 - 教程 **137 篇** Markdown，覆盖排序、搜索、递归、链表/栈/队列/哈希、各类树（BST/AVL/红黑/B 树/线段树/树状数组/Treap/后缀自动机…）、图论、DP（背包/区间/状压/数位/树形）、字符串、数论、计算几何、复杂度分析。
-- 可视化 **126 个面板 / 127 个路由页**。
+- 可视化 **126 个面板 / 127 个路由页**（`components/visualizer/` 有 127 个 `*-panel*.tsx`，其中 `code-panel.tsx` 是共享的代码块组件）。
 - 题库 **19 题**（数据在 PostgreSQL，非 git）。
 
 ## 演示账号

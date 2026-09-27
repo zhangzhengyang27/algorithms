@@ -28,7 +28,7 @@ function cloneBlocks(blocks: Block[]): Block[] {
   return blocks.map((b) => ({ items: [...b.items] }));
 }
 
-function buildSteps(values: number[], S: number): VizStep<BlockListState>[] {
+export function buildSteps(values: number[], S: number): VizStep<BlockListState>[] {
   const steps: VizStep<BlockListState>[] = [];
   let blocks: Block[] = [];
 

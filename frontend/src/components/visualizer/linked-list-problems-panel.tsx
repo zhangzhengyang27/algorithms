@@ -76,7 +76,7 @@ const CYCLE_NODES = [3, 2, 0, -4];
 const CYCLE_AT = 1;
 const REMOVE_NODES = [1, 2, 3, 4, 5];
 
-function buildSteps(listA: number[], listB: number[], k: number): VizStep<LLState>[] {
+export function buildSteps(listA: number[], listB: number[], k: number): VizStep<LLState>[] {
   const steps: VizStep<LLState>[] = [];
   const nodes = CYCLE_NODES;
   const cycleAt = CYCLE_AT;

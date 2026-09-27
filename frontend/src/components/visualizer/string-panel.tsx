@@ -57,7 +57,7 @@ interface StringState {
   message: string;
 }
 
-function buildSteps(s: string, pat: string): VizStep<StringState>[] {
+export function buildSteps(s: string, pat: string): VizStep<StringState>[] {
   const steps: VizStep<StringState>[] = [];
   const base: StringState = {
     s, phase: 'traverse', idx: -1, rev: '', l: -1, r: -1, palinResult: null,

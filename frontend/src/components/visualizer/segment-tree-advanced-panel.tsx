@@ -62,19 +62,28 @@ interface LazyState {
   message: string;
 }
 
-function buildSteps(): VizStep<LazyState>[] {
+type LazyOp = { type: 'update'; l: number; r: number; val: number } | { type: 'query'; l: number; r: number };
+const DEFAULT_OPS: LazyOp[] = [
+  { type: 'update', l: 1, r: 4, val: 2 },
+  { type: 'query', l: 0, r: 3 },
+  { type: 'update', l: 0, r: 2, val: 1 },
+  { type: 'query', l: 2, r: 5 },
+];
+
+export function buildSteps(nums: number[] = NUMS, opsInput: LazyOp[] = DEFAULT_OPS): VizStep<LazyState>[] {
+  const n = nums.length;
   const steps: VizStep<LazyState>[] = [];
-  const tree = new Array(4 * N).fill(0);
-  const lazy = new Array(4 * N).fill(0);
+  const tree = new Array(4 * n).fill(0);
+  const lazy = new Array(4 * n).fill(0);
 
   const build = (node: number, l: number, r: number) => {
-    if (l === r) { tree[node] = NUMS[l]; return; }
+    if (l === r) { tree[node] = nums[l]; return; }
     const m = (l + r) >> 1;
     build(2 * node + 1, l, m);
     build(2 * node + 2, m + 1, r);
     tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
   };
-  build(0, 0, N - 1);
+  build(0, 0, n - 1);
 
   const snap = (over: Partial<LazyState>): LazyState => ({
     tree: [...tree], lazy: [...lazy], active: -1, tagged: [], pushed: [],
@@ -83,7 +92,7 @@ function buildSteps(): VizStep<LazyState>[] {
   });
 
   steps.push({
-    state: snap({ message: `原数组 [${NUMS.join(', ')}] 构建线段树（区间和）。红色角标 = 懒标记 lazy` }),
+    state: snap({ message: `原数组 [${nums.join(', ')}] 构建线段树（区间和）。红色角标 = 懒标记 lazy` }),
     description: '建树',
     codeLine: 16,
   });
@@ -153,12 +162,7 @@ function buildSteps(): VizStep<LazyState>[] {
   };
 
   // 操作序列
-  const ops: Array<{ type: 'update'; l: number; r: number; val: number } | { type: 'query'; l: number; r: number }> = [
-    { type: 'update', l: 1, r: 4, val: 2 },
-    { type: 'query', l: 0, r: 3 },
-    { type: 'update', l: 0, r: 2, val: 1 },
-    { type: 'query', l: 2, r: 5 },
-  ];
+  const ops = opsInput;
 
   for (const op of ops) {
     if (op.type === 'update') {
@@ -168,7 +172,7 @@ function buildSteps(): VizStep<LazyState>[] {
         description: `修改 [${op.l},${op.r}]+${op.val}`,
         codeLine: 10,
       });
-      update(0, 0, N - 1, op.l, op.r, op.val, tagged);
+      update(0, 0, n - 1, op.l, op.r, op.val, tagged);
       steps.push({
         state: snap({ opRange: [op.l, op.r], opVal: op.val, opType: 'update', phase: 'update', tagged: [...tagged], message: `修改完成：共 ${tagged.length} 个节点被打上懒标记，总和 tree[0]=${tree[0]}` }),
         description: '修改完成',
@@ -181,7 +185,7 @@ function buildSteps(): VizStep<LazyState>[] {
         description: `查询 [${op.l},${op.r}]`,
         codeLine: 18,
       });
-      const res = query(0, 0, N - 1, op.l, op.r, pushed);
+      const res = query(0, 0, n - 1, op.l, op.r, pushed);
       steps.push({
         state: snap({ opRange: [op.l, op.r], opType: 'query', phase: 'query', result: res, message: `✅ sum[${op.l}..${op.r}] = ${res}` }),
         description: `结果 = ${res}`,

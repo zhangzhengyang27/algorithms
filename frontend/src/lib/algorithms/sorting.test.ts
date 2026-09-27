@@ -5,6 +5,8 @@ import {
   quickSort,
   mergeSort,
   heapSort,
+  generateSortSteps,
+  generateRandomArray,
   type SortStep,
 } from './sorting';
 
@@ -58,6 +60,40 @@ describe('sorting algorithms', () => {
 
       it('handles duplicates', () => {
         expect(finalArrayFromSteps(drainSteps(algo([3, 1, 3, 2, 3, 1])))).toEqual([1, 1, 2, 3, 3, 3]);
+      });
+    });
+  }
+});
+
+describe('generateSortSteps（sorting-panel 实际调用的那层封装）', () => {
+  const ALGOS = ['bubble', 'selection', 'insertion', 'quick', 'merge', 'heap'] as const;
+  for (const algorithm of ALGOS) {
+    for (const input of [[5, 2, 8, 1, 9, 2], [], [4, 4, 1], [1, 2, 3]]) {
+      it(`${algorithm}：末步数组等于排序结果、元素守恒，且不改动调用方的数组`, () => {
+        const pristine = [...input];
+        const steps = generateSortSteps(input, algorithm);
+        if (input.length > 1) expect(steps.length).toBeGreaterThan(0);
+        if (steps.length) {
+          const want = [...pristine].sort((a, b) => a - b);
+          const last = steps[steps.length - 1].array;
+          expect([...last].sort((a, b) => a - b)).toEqual(want);
+          if (input.length) expect([...last]).toEqual(want);
+        }
+        expect(input).toEqual(pristine);
+      });
+    }
+  }
+});
+
+describe('generateRandomArray', () => {
+  for (const size of [0, 1, 12]) {
+    it(`长度等于 size 且元素落在 [1, max]`, () => {
+      const arr = generateRandomArray(size, 20);
+      expect(arr.length).toBe(size);
+      arr.forEach((v) => {
+        expect(Number.isInteger(v)).toBe(true);
+        expect(v).toBeGreaterThanOrEqual(1);
+        expect(v).toBeLessThanOrEqual(20);
       });
     });
   }

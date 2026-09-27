@@ -54,15 +54,16 @@ interface HLDState {
   message: string;
 }
 
-function buildSteps(): VizStep<HLDState>[] {
+export function buildSteps(children: number[][] = CHILDREN, val: number[] = VAL, queryPair: [number, number] = [8, 10]): VizStep<HLDState>[] {
+  const n = children.length;
   const steps: VizStep<HLDState>[] = [];
-  const size = new Array(N).fill(0);
-  const depth = new Array(N).fill(0);
-  const heavy = new Array(N).fill(-1);
-  const top = new Array(N).fill(-1);
-  const dfn = new Array(N).fill(-1);
-  const par = new Array(N).fill(-1);
-  const chainId = new Array(N).fill(-1);
+  const size = new Array(n).fill(0);
+  const depth = new Array(n).fill(0);
+  const heavy = new Array(n).fill(-1);
+  const top = new Array(n).fill(-1);
+  const dfn = new Array(n).fill(-1);
+  const par = new Array(n).fill(-1);
+  const chainId = new Array(n).fill(-1);
   let cnt = 0;
   let chainCount = 0;
 
@@ -82,7 +83,7 @@ function buildSteps(): VizStep<HLDState>[] {
   // dfs1
   const dfs1 = (u: number, fa: number) => {
     size[u] = 1; depth[u] = fa < 0 ? 0 : depth[fa] + 1; par[u] = fa;
-    for (const v of CHILDREN[u]) {
+    for (const v of children[u]) {
       dfs1(v, u);
       size[u] += size[v];
       if (heavy[u] < 0 || size[v] > size[heavy[u]]) heavy[u] = v;
@@ -110,7 +111,7 @@ function buildSteps(): VizStep<HLDState>[] {
       chainId[u] = chainId[topNode];
     }
     if (heavy[u] >= 0) dfs2(heavy[u], topNode);
-    for (const v of CHILDREN[u]) if (v !== heavy[u]) dfs2(v, v);
+    for (const v of children[u]) if (v !== heavy[u]) dfs2(v, v);
     steps.push({
       state: snap({ phase: 'dfs2', current: u, message: `节点 ${u}：dfn=${dfn[u]}，链顶 top=${top[u]}${top[u] === u ? '（新链起点）' : `（属于链 ${top[u]}）`}` }),
       description: `dfn[${u}]=${dfn[u]}`,
@@ -126,10 +127,10 @@ function buildSteps(): VizStep<HLDState>[] {
   });
 
   // pathQuery(8, 10)
-  let u = 8, v = 10;
+  let u = queryPair[0], v = queryPair[1];
   const collected: number[] = [];
   steps.push({
-    state: snap({ phase: 'query', curU: u, curV: v, message: `查询路径 ${u} → ${v} 的节点权值和（val=[${VAL.join(',')}]）` }),
+    state: snap({ phase: 'query', curU: u, curV: v, message: `查询路径 ${u} → ${v} 的节点权值和（val=[${val.join(',')}]）` }),
     description: '路径查询',
     codeLine: 14,
   });
@@ -147,7 +148,7 @@ function buildSteps(): VizStep<HLDState>[] {
     const seg: number[] = [];
     for (let x = u; x !== top[u]; x = par[x]) seg.push(x);
     seg.push(top[u]);
-    const segSum = seg.reduce((s, x) => s + VAL[x], 0);
+    const segSum = seg.reduce((s, x) => s + val[x], 0);
     for (const x of seg) if (!collected.includes(x)) collected.push(x);
     steps.push({
       state: snap({ phase: 'query', curU: u, curV: v, collected: [...collected], segNodes: [...seg], message: `收集重链段 [${top[u]}..${u}]（dfn ${dfn[top[u]]}..${dfn[u]}）：节点 ${seg.slice().reverse().join('→')}，段和=${segSum}` }),
@@ -168,7 +169,7 @@ function buildSteps(): VizStep<HLDState>[] {
   for (let x = v; x !== u; x = par[x]) seg.push(x);
   seg.push(u);
   for (const x of seg) if (!collected.includes(x)) collected.push(x);
-  const total = collected.reduce((s, x) => s + VAL[x], 0);
+  const total = collected.reduce((s, x) => s + val[x], 0);
   steps.push({
     state: snap({ phase: 'query', curU: u, curV: v, collected: [...collected], segNodes: [...seg], message: `u=${u}、v=${v} 已在同一条链 ${top[u]} 上，收集最后一段 [${u}..${v}]：节点 ${seg.slice().reverse().join('→')}` }),
     description: `同链段 ${u}→${v}`,
@@ -176,7 +177,7 @@ function buildSteps(): VizStep<HLDState>[] {
   });
 
   steps.push({
-    state: snap({ phase: 'done', curU: u, curV: v, collected: [...collected], result: total, message: `✅ 路径 8→10 共 ${collected.length} 个节点，权值和 = ${collected.map((x) => VAL[x]).join('+')} = ${total}` }),
+    state: snap({ phase: 'done', curU: u, curV: v, collected: [...collected], result: total, message: `✅ 路径 ${u}→${v} 共 ${collected.length} 个节点，权值和 = ${collected.map((x) => val[x]).join('+')} = ${total}` }),
     description: `结果 = ${total}`,
     codeLine: 22,
   });

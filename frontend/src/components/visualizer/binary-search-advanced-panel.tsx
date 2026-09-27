@@ -53,7 +53,7 @@ interface BSState {
   deadLoopDetected: boolean;
 }
 
-function buildFirstSteps(nums: number[], target: number): VizStep<BSState>[] {
+export function buildFirstSteps(nums: number[], target: number): VizStep<BSState>[] {
   const steps: VizStep<BSState>[] = [];
   const n = nums.length;
   let left = 0;
@@ -107,7 +107,7 @@ function buildFirstSteps(nums: number[], target: number): VizStep<BSState>[] {
   return steps;
 }
 
-function buildLastSteps(nums: number[], target: number): VizStep<BSState>[] {
+export function buildLastSteps(nums: number[], target: number): VizStep<BSState>[] {
   const steps: VizStep<BSState>[] = [];
   const n = nums.length;
   let left = 0;
@@ -161,7 +161,7 @@ function buildLastSteps(nums: number[], target: number): VizStep<BSState>[] {
   return steps;
 }
 
-function buildDeadLoopSteps(nums: number[], target: number): VizStep<BSState>[] {
+export function buildDeadLoopSteps(nums: number[], target: number): VizStep<BSState>[] {
   const steps: VizStep<BSState>[] = [];
   const n = nums.length;
   let left = 0;

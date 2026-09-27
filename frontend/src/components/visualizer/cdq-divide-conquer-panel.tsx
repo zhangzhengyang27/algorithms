@@ -46,12 +46,15 @@ interface CDQState {
   message: string;
 }
 
-function buildSteps(): VizStep<CDQState>[] {
-  const steps: VizStep<CDQState>[] = [];
-  const ans = new Array(NP).fill(0);
-  const bit = new Array(MAXC + 1).fill(0);
+export function buildSteps(pts: Point[] = PTS, maxC: number = MAXC): VizStep<CDQState>[] {
 
-  const bitAdd = (c: number, delta: number) => { for (let i = c; i <= MAXC; i += i & -i) bit[i] += delta; };
+  const np = pts.length;
+
+  const steps: VizStep<CDQState>[] = [];
+  const ans = new Array(np).fill(0);
+  const bit = new Array(maxC + 1).fill(0);
+
+  const bitAdd = (c: number, delta: number) => { for (let i = c; i <= maxC; i += i & -i) bit[i] += delta; };
   const bitQuery = (c: number) => { let s = 0; for (let i = c; i > 0; i -= i & -i) s += bit[i]; return s; };
 
   const snap = (over: Partial<CDQState>): CDQState => ({
@@ -78,8 +81,8 @@ function buildSteps(): VizStep<CDQState>[] {
     cdq(l, mid);
     cdq(mid + 1, r);
 
-    const L = PTS.slice(l, mid + 1).sort((x, y) => x.b - y.b);
-    const R = PTS.slice(mid + 1, r + 1).sort((x, y) => x.b - y.b);
+    const L = pts.slice(l, mid + 1).sort((x, y) => x.b - y.b);
+    const R = pts.slice(mid + 1, r + 1).sort((x, y) => x.b - y.b);
     steps.push({
       state: snap({ rangeL: l, rangeR: r, mid, leftIds: L.map((p) => p.id), rightIds: R.map((p) => p.id), phase: 'merge', message: `归并 [${l}, ${r}]：左半按 b 排序 [${L.map((p) => `p${p.id}(b${p.b})`).join(' ')}]，右半 [${R.map((p) => `p${p.id}(b${p.b})`).join(' ')}]` }),
       description: `归并 [${l},${r}]`,
@@ -105,7 +108,7 @@ function buildSteps(): VizStep<CDQState>[] {
     for (let j = 0; j < i; j++) bitAdd(L[j].c, -1);
   };
 
-  cdq(0, NP - 1);
+  cdq(0, np - 1);
 
   steps.push({
     state: snap({ phase: 'done', message: `✅ 完成：ans = [${ans.join(', ')}]。CDQ 分治把三维偏序降为 O(n log² n)` }),

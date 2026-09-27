@@ -62,8 +62,16 @@ interface SortState {
   done: boolean;
 }
 
-function buildCountingSteps(nums: number[]): VizStep<SortState>[] {
+export function buildCountingSteps(nums: number[]): VizStep<SortState>[] {
   const steps: VizStep<SortState>[] = [];
+  if (nums.length === 0) {
+    steps.push({
+      state: { nums: [], mode: 'counting', count: [], countIdx: -1, buckets: [], activeBucket: -1, exp: 0, digitCounts: [], output: [], outIdx: -1, srcIdx: -1, message: '输入为空：请在上方文本框填入逗号分隔的非负整数（0~999）', done: false },
+      description: '空输入',
+      codeLine: 1,
+    });
+    return steps;
+  }
   const snap0 = (msg: string): SortState => ({
     nums: [...nums], mode: 'counting', count: [], countIdx: -1, buckets: [], activeBucket: -1, exp: 0, digitCounts: [], output: [], outIdx: -1, srcIdx: -1, message: msg, done: false,
   });
@@ -106,7 +114,7 @@ function buildCountingSteps(nums: number[]): VizStep<SortState>[] {
   return steps;
 }
 
-function buildBucketSteps(nums: number[], bucketSize: number): VizStep<SortState>[] {
+export function buildBucketSteps(nums: number[], bucketSize: number): VizStep<SortState>[] {
   const steps: VizStep<SortState>[] = [];
   const snap0 = (msg: string): SortState => ({
     nums: [...nums], mode: 'bucket', count: [], countIdx: -1, buckets: [], activeBucket: -1, exp: 0, digitCounts: [], output: [], outIdx: -1, srcIdx: -1, message: msg, done: false,
@@ -151,7 +159,7 @@ function buildBucketSteps(nums: number[], bucketSize: number): VizStep<SortState
   return steps;
 }
 
-function buildRadixSteps(nums: number[]): VizStep<SortState>[] {
+export function buildRadixSteps(nums: number[]): VizStep<SortState>[] {
   const steps: VizStep<SortState>[] = [];
   const snap0 = (msg: string): SortState => ({
     nums: [...nums], mode: 'radix', count: [], countIdx: -1, buckets: [], activeBucket: -1, exp: 0, digitCounts: [], output: [], outIdx: -1, srcIdx: -1, message: msg, done: false,

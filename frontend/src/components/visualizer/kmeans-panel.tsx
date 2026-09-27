@@ -30,7 +30,7 @@ interface KMeansState {
   message: string;
 }
 
-function buildSteps(data: number[][], k: number): VizStep<KMeansState>[] {
+export function buildSteps(data: number[][], k: number): VizStep<KMeansState>[] {
   const steps: VizStep<KMeansState>[] = [];
   const centers = data.slice(0, k).map((c) => [...c]);
   const classes = Array(data.length).fill(-1);

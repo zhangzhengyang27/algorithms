@@ -32,7 +32,7 @@ interface RecursionState {
 
 type Mode = 'factorial' | 'fibonacci';
 
-function buildFactorialSteps(n: number): VizStep<RecursionState>[] {
+export function buildFactorialSteps(n: number): VizStep<RecursionState>[] {
   const steps: VizStep<RecursionState>[] = [];
   let frameId = 0;
 
@@ -96,7 +96,7 @@ function buildFactorialSteps(n: number): VizStep<RecursionState>[] {
   return steps;
 }
 
-function buildFibSteps(n: number): VizStep<RecursionState>[] {
+export function buildFibSteps(n: number): VizStep<RecursionState>[] {
   const steps: VizStep<RecursionState>[] = [];
   let frameId = 0;
   const memo: Record<number, number> = {};

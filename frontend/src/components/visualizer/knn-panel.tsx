@@ -26,7 +26,7 @@ interface KnnState {
   message: string;
 }
 
-function buildSteps(data: number[][], labels: number[], target: number[], k: number): VizStep<KnnState>[] {
+export function buildSteps(data: number[][], labels: number[], target: number[], k: number): VizStep<KnnState>[] {
   const steps: VizStep<KnnState>[] = [];
   const dists = data.map((p, i) => ({ dist: euclid(p, target), label: labels[i] }));
 

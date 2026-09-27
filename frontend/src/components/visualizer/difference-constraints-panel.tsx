@@ -36,7 +36,7 @@ interface DCState {
   message: string;
 }
 
-function buildSteps(n: number, edges: DCEdge[]): VizStep<DCState>[] {
+export function buildSteps(n: number, edges: DCEdge[]): VizStep<DCState>[] {
   const steps: VizStep<DCState>[] = [];
   const dist = new Array(n).fill(0);
 

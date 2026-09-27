@@ -44,7 +44,7 @@ interface HashState {
   message: string;
 }
 
-function buildSteps(keys: number[]): VizStep<HashState>[] {
+export function buildSteps(keys: number[]): VizStep<HashState>[] {
   const steps: VizStep<HashState>[] = [];
   const linear: (number | null)[] = new Array(M).fill(null);
   const chain: number[][] = Array.from({ length: M }, () => []);

@@ -19,7 +19,7 @@ const memoCode = [
   '}',
 ];
 
-interface MNode {
+export interface MNode {
   id: number;
   k: number;
   depth: number;
@@ -37,7 +37,7 @@ function fibVal(k: number): number {
   return a;
 }
 
-function buildNaiveTree(n: number): { root: MNode; nodes: MNode[] } {
+export function buildNaiveTree(n: number): { root: MNode; nodes: MNode[] } {
   let nextId = 0;
   const nodes: MNode[] = [];
   function gen(k: number, depth: number): MNode {
@@ -60,7 +60,7 @@ function buildNaiveTree(n: number): { root: MNode; nodes: MNode[] } {
   return { root, nodes };
 }
 
-function buildMemoTree(n: number): { root: MNode; nodes: MNode[] } {
+export function buildMemoTree(n: number): { root: MNode; nodes: MNode[] } {
   let nextId = 0;
   const nodes: MNode[] = [];
   const memoSet = new Set<number>();
@@ -111,7 +111,7 @@ interface MemoState {
   message: string;
 }
 
-function buildSteps(n: number, naive: MNode[], memo: MNode[]): VizStep<MemoState>[] {
+export function buildSteps(n: number, naive: MNode[], memo: MNode[]): VizStep<MemoState>[] {
   const steps: VizStep<MemoState>[] = [];
   const emptyMemo = () => new Array(n + 1).fill(null);
 

@@ -45,7 +45,7 @@ interface PQState {
   result: number[] | null;
 }
 
-function buildSteps(nums: number[], k: number): VizStep<PQState>[] {
+export function buildSteps(nums: number[], k: number): VizStep<PQState>[] {
   const steps: VizStep<PQState>[] = [];
   const heap: number[] = [];
 

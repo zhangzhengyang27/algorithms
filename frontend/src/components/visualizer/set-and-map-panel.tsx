@@ -57,7 +57,7 @@ interface SetMapState {
   message: string;
 }
 
-function buildSteps(): VizStep<SetMapState>[] {
+export function buildSteps(script: Op[] = SCRIPT): VizStep<SetMapState>[] {
   const steps: VizStep<SetMapState>[] = [];
   const set = new Set<number>();
   const map = new Map<string, number>();
@@ -72,7 +72,7 @@ function buildSteps(): VizStep<SetMapState>[] {
 
   steps.push({ state: snap({ message: '初始：空 Set 与空 Map' }), description: '初始化', codeLine: 0 });
 
-  for (const op of SCRIPT) {
+  for (const op of script) {
     if (op.type === 'set-add') {
       const existed = set.has(op.value);
       set.add(op.value);

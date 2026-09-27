@@ -33,7 +33,7 @@ function inBounds(n: number, r: number, c: number) {
 
 const MAX_STEPS = 50_000;
 
-function buildSteps(n: number): VizStep<KnightTourState>[] {
+export function buildSteps(n: number): VizStep<KnightTourState>[] {
   const steps: VizStep<KnightTourState>[] = [];
   const board = Array(n).fill(null).map(() => Array(n).fill(0));
   const order = Array(n).fill(null).map(() => Array(n).fill(-1));

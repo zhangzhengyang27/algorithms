@@ -59,14 +59,15 @@ interface TDCState {
   message: string;
 }
 
-function buildSteps(): VizStep<TDCState>[] {
+export function buildSteps(children: number[][] = CHILDREN): VizStep<TDCState>[] {
+  const n = children.length;
   const steps: VizStep<TDCState>[] = [];
-  const adj = buildAdj(CHILDREN);
+  const adj = buildAdj(children);
 
   const base = (): TDCState => ({
-    dist: new Array(N).fill(-1), bfsSource: -1, visited: [], current: -1, farthest: -1,
+    dist: new Array(n).fill(-1), bfsSource: -1, visited: [], current: -1, farthest: -1,
     p: null, q: null, diameter: null, diameterPath: [],
-    size: new Array(N).fill(0), maxPart: new Array(N).fill(0),
+    size: new Array(n).fill(0), maxPart: new Array(n).fill(0),
     centroid: null, bestMax: null, phase: 'bfs1', message: '',
   });
 
@@ -81,8 +82,8 @@ function buildSteps(): VizStep<TDCState>[] {
 
   // 通用 BFS，返回 {order, dist, parents, best}，并逐步记录 step
   const runBfs = (start: number, phase: 'bfs1' | 'bfs2', codeBase: number) => {
-    const dist = new Array(N).fill(-1);
-    const parents = new Array(N).fill(-1);
+    const dist = new Array(n).fill(-1);
+    const parents = new Array(n).fill(-1);
     const queue = [start];
     dist[start] = 0;
     const order: number[] = [];
@@ -104,7 +105,7 @@ function buildSteps(): VizStep<TDCState>[] {
       });
     }
     let best = start;
-    for (let u = 0; u < N; u++) if (dist[u] > dist[best]) best = u;
+    for (let u = 0; u < n; u++) if (dist[u] > dist[best]) best = u;
     return { order, dist, parents, best };
   };
 
@@ -130,16 +131,16 @@ function buildSteps(): VizStep<TDCState>[] {
   });
 
   // 重心
-  st = { ...st, phase: 'centroid', current: -1, visited: [], dist: new Array(N).fill(-1) };
+  st = { ...st, phase: 'centroid', current: -1, visited: [], dist: new Array(n).fill(-1) };
   steps.push({
     state: snap({ message: '求树的重心：DFS 计算子树大小 size[u]，重心是 max(最大子树, n-size[u]) 最小的节点' }),
     description: '开始求重心',
     codeLine: 16,
   });
 
-  const size = new Array(N).fill(0);
-  const maxPart = new Array(N).fill(0);
-  let centroid = 0, bestMax = N;
+  const size = new Array(n).fill(0);
+  const maxPart = new Array(n).fill(0);
+  let centroid = 0, bestMax = n;
   const postorder: number[] = [];
   const dfs = (u: number, fa: number) => {
     size[u] = 1;
@@ -150,7 +151,7 @@ function buildSteps(): VizStep<TDCState>[] {
       size[u] += size[v];
       mp = Math.max(mp, size[v]);
     }
-    mp = Math.max(mp, N - size[u]);
+    mp = Math.max(mp, n - size[u]);
     maxPart[u] = mp;
     const prevBest = bestMax;
     const improved = mp < bestMax;

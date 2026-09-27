@@ -43,10 +43,19 @@ interface UFState {
   message: string;
 }
 
-function buildSteps(): VizStep<UFState>[] {
+type UFOp = { type: 'union'; a: number; b: number; w: number } | { type: 'query'; a: number; b: number };
+const DEFAULT_OPS: UFOp[] = [
+  { type: 'union', a: 0, b: 1, w: -1 },
+  { type: 'union', a: 1, b: 2, w: -1 },
+  { type: 'query', a: 0, b: 2 },
+  { type: 'union', a: 3, b: 0, w: 2 },
+  { type: 'query', a: 3, b: 1 },
+];
+
+export function buildSteps(n: number = N, ops: UFOp[] = DEFAULT_OPS): VizStep<UFState>[] {
   const steps: VizStep<UFState>[] = [];
-  const parent = Array.from({ length: N }, (_, i) => i);
-  const dist = new Array(N).fill(0);
+  const parent = Array.from({ length: n }, (_, i) => i);
+  const dist = new Array(n).fill(0);
 
   const snap = (over: Partial<UFState>): UFState => ({
     parent: [...parent], dist: [...dist], opA: -1, opB: -1, opW: 0, opType: null,
@@ -144,11 +153,10 @@ function buildSteps(): VizStep<UFState>[] {
     codeLine: 0,
   });
 
-  unionOp(0, 1, -1); // 0 比 1 轻 1
-  unionOp(1, 2, -1); // 1 比 2 轻 1 → 链 0→1→2
-  queryOp(0, 2);     // 触发路径压缩
-  unionOp(3, 0, 2);  // 3 比 0 重 2
-  queryOp(3, 1);     // 3 比 1 重 1
+  for (const op of ops) {
+    if (op.type === 'union') unionOp(op.a, op.b, op.w);
+    else queryOp(op.a, op.b);
+  }
 
   steps.push({
     state: snap({ phase: 'done', message: '完成：路径压缩保证近似 O(α(n)) 查询，权值在压缩时自动累加到根' }),

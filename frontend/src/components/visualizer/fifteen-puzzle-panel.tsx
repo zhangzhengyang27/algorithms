@@ -108,7 +108,7 @@ function solvePath15(start: number[]): { path: number[][]; moves: number[] } | n
   return { path, moves };
 }
 
-function buildSteps(start: number[]): VizStep<PuzzleState>[] {
+export function buildSteps(start: number[]): VizStep<PuzzleState>[] {
   const res = solvePath15(start);
   if (res === null) {
     return [{

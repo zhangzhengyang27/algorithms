@@ -64,7 +64,7 @@ function applyOp(op: string, a: number, b: number): number {
   }
 }
 
-function buildSteps(a: number, b: number, op: string): VizStep<BitState>[] {
+export function buildSteps(a: number, b: number, op: string): VizStep<BitState>[] {
   const steps: VizStep<BitState>[] = [];
   const aBits = toBits(a);
   const bBits = toBits(b);

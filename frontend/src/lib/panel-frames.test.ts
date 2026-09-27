@@ -2050,3 +2050,725 @@ describe('weighted-random-panel（加权随机抽样）', () => {
     for (let i = 1; i < hits.length; i++) expect(hits[i]).toBeGreaterThanOrEqual(hits[i - 1]);
   });
 });
+
+// ===== 第九批 A：18 个有参面板（二分进阶/位运算/分块表/环形队列/差分约束/背包/十五数码/哈希冲突/
+// k-means/k-最近点/kNN/链表四合一/多项式哈希/TopK/递归/进阶排序/字符串四合一/复杂度曲线）=====
+import { buildFirstSteps as bsFirst, buildLastSteps as bsLast, buildDeadLoopSteps as bsDead } from '@/components/visualizer/binary-search-advanced-panel';
+import { buildSteps as bitOpsBuild } from '@/components/visualizer/bit-manipulation-panel';
+import { buildSteps as blockBuild } from '@/components/visualizer/block-list-panel';
+import { buildSteps as cqBuild } from '@/components/visualizer/design-data-structures-panel';
+import { buildSteps as dcDiffBuild } from '@/components/visualizer/difference-constraints-panel';
+import { buildSteps as knap2d } from '@/components/visualizer/dp-panel';
+import { buildSteps as fifteenBuild } from '@/components/visualizer/fifteen-puzzle-panel';
+import { buildSteps as collideBuild } from '@/components/visualizer/hash-collision-panel';
+import { buildSteps as kmeansBuild } from '@/components/visualizer/kmeans-panel';
+import { buildSteps as knightBuild } from '@/components/visualizer/knight-tour-panel';
+import { buildSteps as knnBuild } from '@/components/visualizer/knn-panel';
+import { buildSteps as llBuild } from '@/components/visualizer/linked-list-problems-panel';
+import { buildSteps as polyBuild } from '@/components/visualizer/polynomial-hash-panel';
+import { buildSteps as topkBuild } from '@/components/visualizer/priority-queue-advanced-panel';
+import { buildFactorialSteps as factBuild, buildFibSteps as fibBuild } from '@/components/visualizer/recursion-panel';
+import { buildCountingSteps as advCount, buildBucketSteps as advBucket, buildRadixSteps as advRadix } from '@/components/visualizer/sorting-advanced-panel';
+import { buildSteps as strBuild } from '@/components/visualizer/string-panel';
+import { buildSteps as cxBuild } from '@/components/visualizer/time-complexity-panel';
+
+const lastPhaseState = (frames: any[], phase: string) =>
+  lastState(frames.filter((f: any) => f.state.phase === phase));
+
+function refLinearTopK(nums: number[], k: number): number[] {
+  return [...nums].sort((a, b) => b - a).slice(0, k);
+}
+
+describe('binary-search-advanced-panel（first / last / 死循环演示）', () => {
+  for (const [nums, target] of [
+    [[1, 1, 2, 2, 3, 3], 2], [[1, 2, 3, 4, 5], 1], [[1, 2, 3, 4, 5], 5],
+    [[1, 2, 3, 4, 5], 6], [[2, 2, 2], 2], [[7], 7], [[7], 3],
+  ] as [number[], number][]) {
+    it(`first/last 下标等于 indexOf / lastIndexOf（${JSON.stringify(nums)} 找 ${target}）`, () => {
+      const f = lastState(bsFirst([...nums], target));
+      const l = lastState(bsLast([...nums], target));
+      const first = nums.indexOf(target);
+      expect(f.found).toBe(first < 0 ? null : first);
+      expect(l.found).toBe(first < 0 ? null : nums.lastIndexOf(target));
+    });
+    it(`死循环演示（${JSON.stringify(nums)} 找 ${target}）与独立模拟的判定一致`, () => {
+      let left = 0, right = nums.length - 1, iter = 0;
+      const seen = new Set<string>();
+      let simDead = false;
+      while (left <= right) {
+        if (++iter > 500) { simDead = true; break; }
+        const mid = left + ((right - left) >> 1);
+        const key = `${left},${right},${mid}`;
+        if (seen.has(key)) { simDead = true; break; }
+        seen.add(key);
+        if (nums[mid] < target) left = mid; else right = mid - 1; // 面板演示的错误写法
+      }
+      expect(!!lastState(bsDead([...nums], target)).deadLoopDetected).toBe(simDead);
+    });
+  }
+});
+
+describe('bit-manipulation-panel（按位 AND / OR / XOR）', () => {
+  for (const [a, b, op] of [[12, 10, '&'], [12, 10, '|'], [12, 10, '^'], [255, 1, '&'], [0, 5, '^'], [170, 85, '|']] as [number, number, string][]) {
+    it(`${a} ${op} ${b} 等于 JS 内置运算符`, () => {
+      const s = lastState(bitOpsBuild(a, b, op));
+      const want = op === '&' ? a & b : op === '|' ? a | b : a ^ b;
+      expect(s.result).toBe(want);
+      expect(Number.parseInt(String(s.resultBits).replace(/[^01]/g, ''), 2)).toBe(want);
+    });
+  }
+});
+
+describe('block-list-panel（分块表插入与分裂）', () => {
+  for (const [values, S] of [[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 3], [[42], 3], [[9, 8, 7, 6, 5, 4, 3, 2, 1], 2]] as [number[], number][]) {
+    it(`插入 ${values.length} 个值后各块拼接等于插入顺序`, () => {
+      const s = lastState(blockBuild([...values], S));
+      const flat = (s.blocks as any[]).flatMap((b) => b.items as number[]);
+      expect(flat).toEqual(values);
+      expect((s.blocks as any[]).every((b) => b.items.length > 0)).toBe(true);
+    });
+  }
+});
+
+describe('design-data-structures-panel（环形队列 API）', () => {
+  const ops = (seq: [string, number?][]): any[] => seq.map(([t, v]) => (t === 'enq' ? { type: 'enq', value: v! } : { type: 'deq' }));
+  for (const [capacity, seq] of [
+    [3, [['enq', 1], ['enq', 2], ['deq'], ['enq', 3], ['enq', 4], ['enq', 5]]],
+    [3, [['deq'], ['enq', 1], ['deq'], ['deq']]],
+    [1, [['enq', 7], ['enq', 8], ['deq'], ['enq', 9]]],
+    [4, [['enq', 1], ['enq', 2], ['enq', 3], ['enq', 4], ['deq'], ['deq'], ['enq', 5]]],
+  ] as [number, [string, number?][]][]) {
+    it(`capacity=${capacity} 操作序列的存活元素等于独立模拟`, () => {
+      const q: number[] = [];
+      for (const [t, v] of seq) {
+        if (t === 'enq') { if (q.length < capacity) q.push(v!); }
+        else if (q.length) q.shift();
+      }
+      const s = lastState(cqBuild(capacity, ops(seq)));
+      const live: number[] = [];
+      for (let i = 0; i < (s.size as number); i++) live.push((s.arr as (number | null)[])[((s.front as number) + i) % capacity] as number);
+      expect(live).toEqual(q);
+      expect(s.size).toBe(q.length);
+    });
+  }
+});
+
+describe('difference-constraints-panel（差分约束可行性）', () => {
+  const cases: [number, { u: number; v: number; w: number }[]][] = [
+    [3, [{ u: 0, v: 1, w: 2 }, { u: 1, v: 2, w: 3 }, { u: 0, v: 2, w: 6 }]],
+    [2, [{ u: 0, v: 1, w: -2 }, { u: 1, v: 0, w: -3 }]], // 负环 → 不可行
+    [4, [{ u: 0, v: 1, w: 1 }, { u: 1, v: 2, w: 1 }, { u: 2, v: 3, w: 1 }, { u: 3, v: 0, w: -5 }]],
+    [1, []],
+  ];
+  for (const [n, edges] of cases) {
+    it(`n=${n}：给出的解必须逐条满足约束，负环判定与我独立跑 BF 一致`, () => {
+      const s = lastState(dcDiffBuild(n, edges.map((e) => ({ ...e }))));
+      // 独立判负环：从虚拟源 0 出发松弛 n 轮，第 n+1 轮仍可松弛即有负环
+      const d = new Array(n).fill(0);
+      for (let r = 0; r < n; r++) for (const e of edges) if (d[e.v] > d[e.u] + e.w) d[e.v] = d[e.u] + e.w;
+      let negCycle = false;
+      for (const e of edges) if (d[e.v] > d[e.u] + e.w) negCycle = true;
+      const dist = s.dist as number[];
+      if (negCycle) {
+        expect(s.negativeCycle).toBe(true);
+      } else {
+        expect(s.negativeCycle || false).toBe(false);
+        for (const e of edges) expect(dist[e.v] - dist[e.u]).toBeLessThanOrEqual(e.w);
+      }
+    });
+  }
+});
+
+describe('dp-panel（二维表 0/1 背包）', () => {
+  const cases: [{ weight: number; value: number }[], number][] = [
+    [[{ weight: 2, value: 3 }, { weight: 1, value: 2 }, { weight: 3, value: 4 }, { weight: 2, value: 1 }], 5],
+    [[{ weight: 1, value: 1 }], 0],
+    [[{ weight: 5, value: 10 }, { weight: 5, value: 11 }], 5],
+    [[], 3],
+  ];
+  for (const [items, capacity] of cases) {
+    it(`容量 ${capacity} 的最大价值等于独立一维 DP`, () => {
+      const dp = new Array(capacity + 1).fill(0);
+      for (const it of items) for (let w = capacity; w >= it.weight; w--) dp[w] = Math.max(dp[w], dp[w - it.weight] + it.value);
+      const table = lastState(knap2d(items.map((i) => ({ ...i })), capacity)).table as number[][];
+      expect(table[items.length][capacity]).toBe(dp[capacity]);
+      for (let c = 1; c <= capacity; c++) expect(table[items.length][c]).toBeGreaterThanOrEqual(table[items.length][c - 1]);
+    });
+  }
+});
+
+describe('fifteen-puzzle-panel（IDA* 求解十五数码）', () => {
+  const GOAL = [...Array(15).keys()].map((i) => i + 1).concat([0]);
+  const slides = (frames: any[]): number[][] => frames.map((f: any) => f.state.board as number[]);
+  for (const start of [
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14, 0],
+    [2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 13, 14, 15, 12],
+  ]) {
+    it(`给出的解真的是一步步滑到目标布局（${JSON.stringify(start)}）`, () => {
+      const frames = fifteenBuild([...start]);
+      const s = lastState(frames);
+      const path = slides(frames);
+      if (s.total === -1) {
+        // 面板声称不可达或超时：奇偶性可独立核算
+        const inv = (b: number[]) => {
+          let c = 0;
+          const f = b.filter((x) => x !== 0);
+          for (let i = 0; i < f.length; i++) for (let j = i + 1; j < f.length; j++) if (f[i] > f[j]) c++;
+          return c;
+        };
+        expect(inv(start) % 2).toBe(1); // 奇逆序数 = 真的不可达
+      } else {
+        expect(path[0]).toEqual(start);
+        expect(path[path.length - 1]).toEqual(GOAL);
+        expect(s.total).toBe(path.length - 1);
+        for (let i = 1; i < path.length; i++) {
+          const a = path[i - 1], b = path[i];
+          const blank = a.indexOf(0);
+          const diff = a.map((v, k) => (v === b[k] ? -1 : k)).filter((k) => k >= 0);
+          expect(diff.length).toBe(2); // 只有空格与一个滑块交换
+          expect(diff).toContain(blank);
+          const moved = diff.find((k) => k !== blank)!;
+          expect(Math.abs(moved % 4 - blank % 4) + Math.abs(Math.floor(moved / 4) - Math.floor(blank / 4))).toBe(1);
+        }
+      }
+    });
+  }
+});
+
+describe('hash-collision-panel（线性探测 / 链地址 / 双重哈希）', () => {
+  const M = 7;
+  const h1 = (k: number) => k % M;
+  const h2 = (k: number) => 5 - (k % 5);
+  for (const keys of [[15, 22, 8, 7, 1], [1, 2, 3], [7, 14, 21], [6, 13, 20, 27]]) {
+    it(`${JSON.stringify(keys)}：三张表都不丢键，且落位符合各自探测规则`, () => {
+      const s = lastState(collideBuild([...keys]));
+      const lin = (s.linearTable as (number | null)[]).filter((x) => x !== null) as number[];
+      const dbl = (s.doubleTable as (number | null)[]).filter((x) => x !== null) as number[];
+      const chain = (s.chainTable as number[][]).flat();
+      expect([...lin].sort((a, b) => a - b)).toEqual([...keys].sort((a, b) => a - b));
+      expect([...dbl].sort((a, b) => a - b)).toEqual([...keys].sort((a, b) => a - b));
+      expect(chain.sort((a, b) => a - b)).toEqual([...keys].sort((a, b) => a - b));
+      // 链地址：每个键必须在自己的 home 桶
+      keys.forEach((k) => expect((s.chainTable as number[][])[h1(k)]).toContain(k));
+      // 线性探测：从 home 起第一个空位就是它的落点
+      const sim: (number | null)[] = new Array(M).fill(null);
+      for (const k of keys) { let i = h1(k); while (sim[i] !== null) i = (i + 1) % M; sim[i] = k; }
+      expect(s.linearTable).toEqual(sim);
+      // 双重哈希：步长 h2，探测序列 (h1 + t*h2) % M
+      const sim2: (number | null)[] = new Array(M).fill(null);
+      for (const k of keys) { let t = 0, i = h1(k); while (sim2[i] !== null) { t++; i = (h1(k) + t * h2(k)) % M; } sim2[i] = k; }
+      expect(s.doubleTable).toEqual(sim2);
+    });
+  }
+});
+
+describe('kmeans-panel（k 均值聚类收敛）', () => {
+  for (const [data, k] of [
+    [[[0, 0], [1, 1], [1, 0], [10, 10], [11, 11], [10, 12]], 2],
+    [[[1, 1], [2, 2], [8, 8], [9, 9], [5, 5]], 3],
+  ] as [number[][], number][]) {
+    it(`末态的分配一定是「最近的中心」，且中心就是所属点的均值`, () => {
+      const s = lastState(kmeansBuild(data.map((p) => [...p]), k));
+      const centers = s.centers as number[][];
+      const classes = s.classes as number[];
+      expect(centers.length).toBe(k);
+      const dist = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+      data.forEach((p, i) => {
+        const best = centers.reduce((bi, c, j) => (dist(p, c) < dist(p, centers[bi]) ? j : bi), 0);
+        expect(classes[i]).toBe(best);
+      });
+      for (let c = 0; c < k; c++) {
+        const pts = data.filter((_, i) => classes[i] === c);
+        if (!pts.length) continue;
+        const mean = [0, 1].map((d) => pts.reduce((acc, p) => acc + p[d], 0) / pts.length);
+        expect(Math.abs(centers[c][0] - mean[0])).toBeLessThan(0.01);
+        expect(Math.abs(centers[c][1] - mean[1])).toBeLessThan(0.01);
+      }
+    });
+  }
+});
+
+describe('knight-tour-panel（马踏棋盘回溯）', () => {
+  for (const n of [3, 4, 5]) {
+    it(`n=${n}：声称完成就必须是 0..n²-1 的合法马步序列（order 存步序，board 只存访问标记）`, () => {
+      const s = lastState(knightBuild(n));
+      const order = s.order as number[][];
+      const cells = new Map<number, [number, number]>();
+      order.forEach((row, r) => row.forEach((v, c) => { if (v >= 0) cells.set(v, [r, c]); }));
+      const full = cells.size === n * n && [...Array(n * n).keys()].every((i) => cells.has(i));
+      const claim = String(s.message);
+      if (claim.includes('完成巡游')) {
+        expect(full).toBe(true);
+        expect(claim).toContain(`${n * n} 步`);
+        for (let i = 1; i < n * n; i++) {
+          const a = cells.get(i - 1)!, b = cells.get(i)!;
+          const d = [Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])].sort((x, y) => x - y);
+          expect(d).toEqual([1, 2]);
+        }
+      } else {
+        expect(full).toBe(false);
+      }
+    });
+  }
+});
+
+describe('knn-panel（k 近邻投票）', () => {
+  const data = [[0, 0], [1, 0], [0, 1], [9, 9], [10, 9], [9, 10]];
+  const labels = [0, 0, 0, 1, 1, 1];
+  for (const [target, k] of [[[0.2, 0.2], 3], [[9.5, 9.5], 3], [[5, 5], 1], [[9, 9], 5]] as [[number, number], number][]) {
+    it(`目标 ${JSON.stringify(target)} 的 k=${k} 邻居与独立计算的距离序一致`, () => {
+      const s = lastState(knnBuild(data.map((p) => [...p]), [...labels], [...target], k));
+      const ds = data.map((p, i) => ({ i, d: Math.hypot(p[0] - target[0], p[1] - target[1]), l: labels[i] }))
+        .sort((a, b) => a.d - b.d);
+      const chosen = (s.chosen as number[]);
+      expect(chosen.length).toBe(k);
+      expect([...chosen].sort((a, b) => a - b)).toEqual(ds.slice(0, k).map((x) => x.i).sort((a, b) => a - b));
+      const cnt: Record<number, number> = {};
+      ds.slice(0, k).forEach((x) => { cnt[x.l] = (cnt[x.l] ?? 0) + 1; });
+      const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0];
+      expect(String(s.message)).toContain(`类 ${top}`);
+    });
+  }
+});
+
+describe('linked-list-problems-panel（删除倒数第 k 个节点）', () => {
+  for (const [listA, listB, k] of [
+    [[1, 2, 3, 4, 5], [6, 7], 2],
+    [[1], [2], 1],
+    [[9, 8, 7], [], 3],
+    [[1, 2, 3, 4, 5], [6, 7], 5],
+  ] as [number[], number[], number][]) {
+    it(`k=${k}：删除的下标必须等于「表长 - k」，且 slow 恰好停在前一个`, () => {
+      const s = lastState(llBuild([...listA], [...listB], k));
+      const nodes = s.rNodes as number[]; // 该子问题用面板自带的固定链表，不吃 listA
+      const idx = nodes.length - k;
+      expect(s.removed).toBe(idx);
+      expect(s.rSlow as number).toBe(idx - 1);
+      expect(nodes[s.removed as number]).toBe(nodes[nodes.length - k]);
+    });
+  }
+});
+
+describe('polynomial-hash-panel（多项式滚动哈希）', () => {
+  for (const word of ['abc', 'a', '', 'hello world', 'zzzzzz']) {
+    it(`滚动哈希等于「按幂次直接求和」的另一条算法路径（${JSON.stringify(word)}）`, () => {
+      const BASE = 37, MOD = 101;
+      // 路径一：Horner 递推（与面板同式，但由我另写）
+      let horner = 0;
+      for (const ch of word) horner = (horner * BASE + ch.codePointAt(0)!) % MOD;
+      // 路径二：显式幂次求和，完全不同的算法形状
+      let sum = 0;
+      for (let i = 0; i < word.length; i++) {
+        const code = word[i].codePointAt(0)!;
+        let pow = 1;
+        for (let e = 0; e < word.length - 1 - i; e++) pow = (pow * BASE) % MOD;
+        sum = (sum + ((code * pow) % MOD)) % MOD;
+      }
+      expect(sum).toBe(horner);
+      expect(lastState(polyBuild(word)).h).toBe(horner);
+    });
+  }
+});
+
+describe('priority-queue-advanced-panel（数据流中的 Top-K 大）', () => {
+  for (const [nums, k] of [
+    [[3, 2, 1, 5, 6, 4], 2], [[1], 1], [[5, 5, 5, 5], 3], [[9, 8, 7, 6, 5, 4, 3, 2, 1], 4], [[4, 1, 2], 1],
+  ] as [number[], number][]) {
+    it(`TopK（${JSON.stringify(nums)}, k=${k}）等于排序截取，且末态堆满足小顶堆序`, () => {
+      const s = lastState(topkBuild([...nums], k));
+      const result = (s.result as number[]).slice().sort((a, b) => b - a);
+      expect(result).toEqual(refLinearTopK(nums, Math.min(k, nums.length)).sort((a, b) => b - a));
+      const heap = s.heap as number[];
+      for (let i = 1; i < heap.length; i++) expect(heap[(i - 1) >> 1]).toBeLessThanOrEqual(heap[i]);
+    });
+  }
+});
+
+describe('recursion-panel（阶乘与斐波那契递归）', () => {
+  for (const n of [0, 1, 5, 10, 12]) {
+    it(`factorial(${n}) 与 fib(${n}) 等于迭代值`, () => {
+      let f = 1;
+      for (let i = 2; i <= n; i++) f *= i;
+      const fibs = [0, 1];
+      for (let i = 2; i <= n; i++) fibs.push(fibs[i - 1] + fibs[i - 2]);
+      expect(lastState(factBuild(n)).finalResult).toBe(f);
+      expect(lastState(fibBuild(n)).finalResult).toBe(n === 0 ? 0 : fibs[n]);
+    });
+  }
+});
+
+describe('sorting-advanced-panel（计数 / 桶 / 基数排序）', () => {
+  const sets = [[5, 2, 8, 1, 9, 2], [1], [], [9, 9, 9], [3, 1, 4, 1, 5, 9, 2, 6], [0, 100, 50, 25, 75]];
+  const sorted = (a: number[]) => [...a].sort((x, y) => x - y);
+  for (const nums of sets) {
+    it(`三种排序都排好序且不丢元素（${JSON.stringify(nums)}）`, () => {
+      const want = sorted(nums);
+      const c = lastState(advCount([...nums]));
+      const b = lastState(advBucket([...nums], 5));
+      const r = lastState(advRadix([...nums]));
+      for (const s of [c, b, r]) {
+        expect([...(s.nums as number[])].sort((x, y) => x - y)).toEqual(want);
+      }
+      expect([...(r.nums as number[])]).toEqual(want);
+    });
+  }
+});
+
+describe('string-panel（遍历 / 反转 / 回文 / 查找 / 计数 多阶段）', () => {
+  for (const [s, pat] of [['racecar', 'ace'], ['hello', 'll'], ['', 'a'], ['abba', 'ba'], ['a', 'a']]) {
+    it(`逐阶段核对：${JSON.stringify(s)}（找 ${JSON.stringify(pat)}）`, () => {
+      const frames = strBuild(s, pat);
+      const rev = lastPhaseState(frames, 'reverse');
+      const pal = lastPhaseState(frames, 'palindrome');
+      const sea = lastPhaseState(frames, 'search');
+      const cnt = lastPhaseState(frames, 'count');
+      expect(rev.rev).toBe([...s].reverse().join(''));
+      if (pal.palinResult !== null && pal.palinResult !== undefined) {
+        expect(!!pal.palinResult).toBe(s === [...s].reverse().join(''));
+      }
+      expect(sea.found).toBe(s.indexOf(pat));
+      const mine: Record<string, number> = {};
+      for (const ch of s) mine[ch] = (mine[ch] ?? 0) + 1;
+      expect(cnt.counts).toEqual(mine);
+    });
+  }
+});
+
+describe('time-complexity-panel（复杂度曲线）', () => {
+  for (const maxN of [10, 1000, 1]) {
+    it(`maxN=${maxN}：逐条曲线展开并在末帧停在最大 n`, () => {
+      const frames = cxBuild(maxN);
+      const s = lastState(frames);
+      expect(s.activeN).toBe(maxN);
+      expect(s.visibleCount).toBeGreaterThan(0);
+      const counts = frames.map((f: any) => f.state.visibleCount as number);
+      expect(counts.every((v, i) => i === 0 || v >= counts[i - 1])).toBe(true);
+      expect(s.visibleCount).toBe(Math.max(...counts));
+    });
+  }
+});
+
+// ===== 第九批 B：8 个「原本 buildSteps() 无参」的面板——本批把写死的数据/演示脚本提成了带默认值的入参，
+// 于是可以被外部数据驱动地验证。=====
+import { buildSteps as blBuild } from '@/components/visualizer/binary-lifting-panel';
+import { buildSteps as cdqBuild } from '@/components/visualizer/cdq-divide-conquer-panel';
+import { buildSteps as hldBuild } from '@/components/visualizer/heavy-light-decomposition-panel';
+import { buildSteps as pstBuild } from '@/components/visualizer/persistent-segment-tree-panel';
+import { buildSteps as lazySegBuild } from '@/components/visualizer/segment-tree-advanced-panel';
+import { buildSteps as setMapBuild } from '@/components/visualizer/set-and-map-panel';
+import { buildSteps as tdcBuild } from '@/components/visualizer/tree-diameter-centroid-panel';
+import { buildSteps as ufAdvBuild } from '@/components/visualizer/union-find-advanced-panel';
+
+const parentsOf = (children: number[][]) => {
+  const p = new Array(children.length).fill(-1);
+  children.forEach((kids, u) => kids.forEach((v) => { p[v] = u; }));
+  return p;
+};
+const depthsOf = (parent: number[]) =>
+  parent.map((_, i) => { let d = 0, x = i; while (parent[x] >= 0) { x = parent[x]; d++; } return d; });
+const lcaNaive = (parent: number[], depth: number[], u: number, v: number) => {
+  let a = u, b = v;
+  while (depth[a] > depth[b]) a = parent[a];
+  while (depth[b] > depth[a]) b = parent[b];
+  while (a !== b) { a = parent[a]; b = parent[b]; }
+  return a;
+};
+const pathSumNaive = (children: number[][], val: number[], u: number, v: number) => {
+  const parent = parentsOf(children), depth = depthsOf(parent);
+  const on = new Set<number>();
+  let a = u, b = v;
+  while (a !== b) {
+    if (depth[a] >= depth[b]) { on.add(a); a = parent[a]; } else { on.add(b); b = parent[b]; }
+  }
+  on.add(a);
+  return [...on].reduce((acc, x) => acc + val[x], 0);
+};
+
+describe('binary-lifting-panel（LCA 倍增）', () => {
+  for (const [children, queries] of [
+    [[[1, 2], [3, 4], [5], [6], [], [7], [8], [9], [], []], [[8, 9], [9, 5], [0, 9], [3, 4]]],
+    [[[], [], [], []], [[3, 2], [0, 3]]],                       // 链 0→1→2→3
+    [[[1, 2, 3], [], [], []], [[1, 2], [1, 3], [0, 3]]],        // 星形
+  ] as [number[][], [number, number][]][]) {
+    it(`每段查询的 LCA 等于「沿父指针暴力上跳」：${JSON.stringify(queries)}`, () => {
+      const parent = parentsOf(children);
+      const depth = depthsOf(parent);
+      const frames = blBuild(parent, depth, Math.max(2, Math.ceil(Math.log2(parent.length)) + 1), queries);
+      const done = frames.filter((f: any) => f.state.phase === 'done');
+      expect(done.length).toBe(queries.length);
+      done.forEach((f: any, i) => {
+        const [a, b] = queries[i];
+        expect(f.state.result).toBe(lcaNaive(parent, depth, a, b));
+      });
+    });
+  }
+});
+
+describe('cdq-divide-conquer-panel（三维偏序计数）', () => {
+  // 面板自己不对第一维排序，演示数据本身按 a 升序 —— 用例遵守这个前置约定
+  for (const pts of [
+    [{ a: 1, b: 5, c: 3 }, { a: 2, b: 3, c: 1 }, { a: 3, b: 4, c: 5 }, { a: 4, b: 1, c: 2 }, { a: 5, b: 2, c: 4 }, { a: 6, b: 6, c: 6 }],
+    [{ a: 1, b: 1, c: 1 }, { a: 2, b: 2, c: 2 }],
+    [{ a: 1, b: 1, c: 1 }, { a: 2, b: 2, c: 2 }, { a: 3, b: 3, c: 3 }],
+    [{ a: 1, b: 3, c: 2 }, { a: 2, b: 1, c: 1 }, { a: 3, b: 2, c: 3 }],
+  ].map((arr) => arr.map((p, id) => ({ ...p, id })))) {
+    it(`ans[] 等于「逐点比较三维」的暴力计数`, () => {
+      const want = pts.map((p) => pts.filter((q) => q.id !== p.id && q.a <= p.a && q.b <= p.b && q.c <= p.c).length);
+      const maxC = Math.max(...pts.map((p) => p.c));
+      expect(lastState(cdqBuild(pts.map((p) => ({ ...p })), maxC)).ans).toEqual(want);
+    });
+  }
+});
+
+describe('heavy-light-decomposition-panel（树链求和）', () => {
+  for (const [children, val, pair] of [
+    [[[1, 2, 3], [4, 5], [], [6], [7, 8], [], [9], [], [], [10], []], [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5], [8, 10]],
+    [[[1, 2], [3], [], []], [1, 2, 3, 4], [0, 3]],
+    [[[1, 2], [], []], [7, 8, 9], [1, 2]],
+    [[[1], [2], [3], [4], []], [1, 1, 1, 1, 1], [0, 4]],
+  ] as [number[][], number[], [number, number]][]) {
+    it(`路径 ${pair[0]}→${pair[1]} 的点权和等于沿父指针暴力累加`, () => {
+      expect(lastState(hldBuild(children.map((k) => [...k]), [...val], pair)).result).toBe(pathSumNaive(children, val, pair[0], pair[1]));
+    });
+  }
+});
+
+describe('persistent-segment-tree-panel（版本树区间第 k 小）', () => {
+  for (const [nums, q] of [
+    [[3, 1, 4, 2], [1, 3, 2]], [[5, 4, 3, 2, 1], [0, 4, 1]], [[1, 2, 3, 4], [0, 3, 4]], [[9, 1, 7, 3, 5], [1, 4, 3]],
+  ] as [number[], [number, number, number]][]) {
+    it(`nums[${q[0]}..${q[1]}] 的第 ${q[2]} 小等于切片排序取值`, () => {
+      const maxV = Math.max(...nums);
+      const [l, r, k] = q;
+      expect(lastState(pstBuild([...nums], maxV, q)).result).toBe([...nums.slice(l, r + 1)].sort((a, b) => a - b)[k - 1]);
+    });
+  }
+});
+
+describe('segment-tree-advanced-panel（懒标记区间加 + 区间和）', () => {
+  type SOp = { type: 'update'; l: number; r: number; val: number } | { type: 'query'; l: number; r: number };
+  const scripts: [SOp[], number[]][] = [
+    [[{ type: 'update', l: 1, r: 4, val: 2 }, { type: 'query', l: 0, r: 3 }, { type: 'update', l: 0, r: 2, val: 1 }, { type: 'query', l: 2, r: 5 }], [2, 5, 1, 4, 3, 6]],
+    [[{ type: 'update', l: 0, r: 1, val: 5 }, { type: 'query', l: 0, r: 1 }], [1, 1]],
+    [[{ type: 'query', l: 0, r: 2 }], [7, 8, 9]],
+    [[{ type: 'update', l: 0, r: 4, val: -3 }, { type: 'query', l: 1, r: 3 }], [4, 6, 8, 10, 12]],
+    [[{ type: 'query', l: 0, r: 0 }, { type: 'update', l: 0, r: 0, val: 10 }, { type: 'query', l: 0, r: 0 }], [-2]],
+  ];
+  for (const [ops, nums] of scripts) {
+    it(`每次区间和等于朴素数组回放（${JSON.stringify(nums)}）`, () => {
+      const arr = [...nums];
+      const want: number[] = [];
+      for (const op of ops) {
+        if (op.type === 'update') for (let i = op.l; i <= op.r; i++) arr[i] += op.val;
+        else want.push(arr.slice(op.l, op.r + 1).reduce((x, y) => x + y, 0));
+      }
+      const frames = lazySegBuild([...nums], ops as any[]);
+      // 查询结束时才写入 result，按区间去重后取每次查询的首个非空 result
+      const got: number[] = [];
+      const seenRanges = new Set<string>();
+      for (const f of frames as any[]) {
+        const st = f.state;
+        if (st.opType !== 'query' || st.result === null) continue;
+        const key = JSON.stringify([st.opRange, st.result]);
+        if (!seenRanges.has(key)) { seenRanges.add(key); got.push(st.result as number); }
+      }
+      expect(got).toEqual(want);
+    });
+  }
+});
+
+describe('set-and-map-panel（Set / Map 操作脚本）', () => {
+  const scripts: any[][] = [
+    [[{ type: 'set-add', value: 5 }, { type: 'set-add', value: 3 }, { type: 'set-add', value: 3 }, { type: 'set-has', value: 3 }, { type: 'set-delete', value: 3 }]],
+    [[{ type: 'map-set', key: 'a', value: 1 }, { type: 'map-set', key: 'b', value: 2 }, { type: 'map-set', key: 'a', value: 9 }, { type: 'map-get', key: 'a' }]],
+    [[{ type: 'set-add', value: 1 }, { type: 'set-has', value: 7 }, { type: 'map-set', key: 'k', value: 3 }, { type: 'map-delete', key: 'k' }]],
+    [[]],
+  ];
+  for (const [script] of scripts) {
+    it(`末态集合/映射等于独立模拟：${JSON.stringify(script.map((o: any) => o.type))}`, () => {
+      const set = new Set<number>();
+      const map = new Map<string, number>();
+      for (const op of script) {
+        if (op.type === 'set-add') set.add(op.value);
+        else if (op.type === 'set-delete') set.delete(op.value);
+        else if (op.type === 'map-set') map.set(op.key, op.value);
+        else if (op.type === 'map-delete') map.delete(op.key);
+      }
+      const s = lastState(setMapBuild(script as any[]));
+      expect([...(s.setItems as number[])].sort((a, b) => a - b)).toEqual([...set].sort((a, b) => a - b));
+      const got: Record<string, number> = {};
+      (s.mapEntries as { key: string; value: number }[]).forEach((e) => { got[e.key] = e.value; });
+      expect(got).toEqual(Object.fromEntries(map));
+    });
+  }
+});
+
+describe('tree-diameter-centroid-panel（树的直径与重心）', () => {
+  const trees: number[][][] = [
+    [[1, 2], [3, 4], [5], [6, 7], [], [], [], []],
+    [[1], [2], []],
+    [[1], [2], [3], [4], []],
+    [[1, 2, 3], [], [], []],
+    [[1, 2], [3], [], []],
+  ];
+  for (const children of trees) {
+    it(`${children.length} 个点的直径与重心都等于独立计算`, () => {
+      const n = children.length;
+      const adj: number[][] = Array.from({ length: n }, () => []);
+      children.forEach((kids, u) => kids.forEach((v) => { adj[u].push(v); adj[v].push(u); }));
+      const bfs = (s: number) => {
+        const d = new Array(n).fill(-1); d[s] = 0;
+        const q = [s];
+        for (let i = 0; i < q.length; i++) for (const v of adj[q[i]]) if (d[v] < 0) { d[v] = d[q[i]] + 1; q.push(v); }
+        return d;
+      };
+      let diam = 0;
+      for (let s = 0; s < n; s++) diam = Math.max(diam, ...bfs(s));
+      const parent = parentsOf(children);
+      const depth = depthsOf(parent);
+      const sub = new Array(n).fill(1);
+      [...Array(n).keys()].sort((a, b) => depth[b] - depth[a]).forEach((u) => {
+        if (parent[u] >= 0) sub[parent[u]] += sub[u];
+      });
+      const maxPartOf = (u: number) => {
+        let mx = n - sub[u];
+        for (const v of adj[u]) if (parent[v] === u) mx = Math.max(mx, sub[v]);
+        return mx;
+      };
+      const bestMax = Math.min(...[...Array(n).keys()].map(maxPartOf));
+      const s = lastState(tdcBuild(children.map((k) => [...k])));
+      expect(s.diameter).toBe(diam);
+      // 面板会给每个节点算 maxPart，逐个都必须与我独立算的一致
+      expect(s.maxPart).toEqual([...Array(n).keys()].map(maxPartOf));
+      // 一棵树的重心可以有两个，只断言「面板选的那个确实最优」
+      expect(maxPartOf(s.centroid as number)).toBe(bestMax);
+      expect(s.bestMax).toBe(bestMax);
+    });
+  }
+});
+
+describe('union-find-advanced-panel（带权并查集：关系断言）', () => {
+  type UOp = { type: 'union'; a: number; b: number; w: number } | { type: 'query'; a: number; b: number };
+  const scripts: [UOp[], number][] = [
+    [[{ type: 'union', a: 0, b: 1, w: -1 }, { type: 'union', a: 1, b: 2, w: -1 }, { type: 'query', a: 0, b: 2 }, { type: 'union', a: 3, b: 0, w: 2 }, { type: 'query', a: 3, b: 1 }], 5],
+    [[{ type: 'query', a: 0, b: 1 }], 3],
+    [[{ type: 'union', a: 0, b: 1, w: 4 }, { type: 'union', a: 2, b: 3, w: 5 }, { type: 'query', a: 0, b: 1 }, { type: 'query', a: 1, b: 3 }], 4],
+    [[{ type: 'union', a: 0, b: 1, w: 2 }, { type: 'union', a: 1, b: 0, w: -2 }, { type: 'query', a: 0, b: 1 }], 2],
+    [[{ type: 'union', a: 4, b: 0, w: 7 }, { type: 'query', a: 4, b: 0 }], 5],
+  ];
+  for (const [ops, n] of scripts) {
+    it(`每个 query 的 d[a]-d[b] 等于独立解方程组的势差`, () => {
+      // 参照：把 union(a,b,w) 当作方程 d[a] - d[b] = w，连通块内 BFS 定势（零点任取，差不受影响）
+      const pot = new Array<number>(n).fill(0);
+      const comp = new Array<number>(n).fill(-1); // 跨连通块的关系是「未知」，不能拿两个零点相减
+      const eq: [number, number, number][] = []; // (x, y, w) 表示 d[x] - d[y] = w
+      ops.forEach((op) => { if (op.type === 'union') eq.push([op.a, op.b, op.w]); });
+      let cid = 0;
+      for (let st0 = 0; st0 < n; st0++) {
+        if (comp[st0] >= 0) continue;
+        comp[st0] = cid;
+        const q = [st0];
+        for (let i = 0; i < q.length; i++) {
+          const cur = q[i];
+          for (const [x, y, w] of eq) {
+            if (x === cur && comp[y] < 0) { comp[y] = cid; pot[y] = pot[cur] - w; q.push(y); }
+            if (y === cur && comp[x] < 0) { comp[x] = cid; pot[x] = pot[cur] + w; q.push(x); }
+          }
+        }
+        cid++;
+      }
+      const want = ops.filter((o): o is { type: 'query'; a: number; b: number } => o.type === 'query')
+        .filter((o) => comp[o.a] === comp[o.b])
+        .map((o) => pot[o.a] - pot[o.b]);
+      const frames = ufAdvBuild(n, ops.map((o) => ({ ...o })) as any[]);
+      const got: number[] = [];
+      const stamp = new Set<string>();
+      for (const f of frames as any[]) {
+        const st = f.state;
+        if (st.opType !== 'query' || st.queryResult === null || st.queryResult === undefined) continue;
+        const key = `${st.opA}-${st.opB}`;
+        if (stamp.has(key)) continue;
+        stamp.add(key);
+        got.push(st.queryResult as number);
+      }
+      expect(got).toEqual(want);
+    });
+  }
+});
+
+// memoization-panel 的 buildSteps 吃的是「预先构建好的递归树」，所以可测的真相在两棵树里：
+// 朴素树的节点数、重复标记，与记忆化树的命中结构。参照用迭代 fib 与独立的前序首次出现判定。
+import { buildSteps as memoBuild, buildNaiveTree, buildMemoTree } from '@/components/visualizer/memoization-panel';
+
+const refFibIter = (k: number): number => {
+  let a = 0, b = 1;
+  for (let i = 0; i < k; i++) [a, b] = [b, a + b];
+  return a;
+};
+/** fib(n) 的递归真正会碰到的 k 集合（fib(1) 碰不到 0） */
+const refMemoReach = (k: number): number[] =>
+  k <= 1 ? [k] : [...new Set([k, ...refMemoReach(k - 1), ...refMemoReach(k - 2)])].sort((a, b) => a - b);
+/** 朴素 fib(n) 的调用次数 = 2*fib(n+1) - 1 */
+const refNaiveCalls = (n: number): number => 2 * refFibIter(n + 1) - 1;
+
+describe('memoization-panel（递归树构建）', () => {
+  for (const n of [1, 2, 5, 8, 10]) {
+    it(`朴素树有 ${refNaiveCalls(n)} 个节点、每个节点的值等于迭代 fib，重复标记等于前序首次出现判定`, () => {
+      const { root, nodes } = buildNaiveTree(n);
+      expect(root.k).toBe(n);
+      expect(nodes.length).toBe(refNaiveCalls(n));
+      nodes.forEach((nd) => expect(nd.value).toBe(refFibIter(nd.k)));
+      const seen = new Set<number>();
+      const wantDup: boolean[] = [];
+      (function walk(nd: any) {
+        wantDup.push(seen.has(nd.k));
+        seen.add(nd.k);
+        nd.children.forEach(walk);
+      })(root);
+      const flat = new Map<number, boolean>();
+      (function idx(nd: any) { flat.set(nd.id, nd.duplicate); nd.children.forEach(idx); })(root);
+      const got = nodes.map((nd) => flat.get(nd.id));
+      expect(got).toEqual(wantDup);
+    });
+
+    it(`记忆化树里每个 k 只被真正计算一次，且 k 覆盖 0..${n}`, () => {
+      const { root, nodes } = buildMemoTree(n);
+      const computed = nodes.filter((nd) => !nd.hit);
+      const ks = computed.map((nd) => nd.k);
+      expect(new Set(ks).size).toBe(ks.length);
+      // fib(1) 的递归根本碰不到 fib(0)，所以「算过的 k」要由递归定义推出，而不是 0..n
+      expect([...ks].sort((a, b) => a - b)).toEqual(refMemoReach(n));
+      nodes.forEach((nd) => expect(nd.value).toBe(refFibIter(nd.k)));
+      // 命中节点的 k 必须在它之前的前序里已经算过
+      const doneAt = new Map<number, number>();
+      let seq = 0;
+      (function walk(nd: any) {
+        if (!nd.hit) doneAt.set(nd.k, seq);
+        seq++;
+        nd.children.forEach(walk);
+      })(root);
+      let order = 0;
+      (function check(nd: any) {
+        if (nd.hit) expect(doneAt.get(nd.k)!).toBeLessThan(order);
+        order++;
+        nd.children.forEach(check);
+      })(root);
+      expect(nodes.length).toBeLessThan(2 * refFibIter(n + 1));
+    });
+
+    it(`buildSteps 末帧的对比数字与两棵树自报的规模一致，memo 表等于迭代 fib`, () => {
+      const naive = buildNaiveTree(n);
+      const memo = buildMemoTree(n);
+      const frames = memoBuild(n, naive.nodes as any[], memo.nodes as any[]) as any[];
+      const last = lastState(frames);
+      expect(last.phase).toBe('done');
+      const wantTable: (number | null)[] = new Array(n + 1).fill(null);
+      refMemoReach(n).forEach((k) => { wantTable[k] = refFibIter(k); });
+      expect(last.memoTable.slice(0, n + 1)).toEqual(wantTable);
+      const naiveMax = Math.max(...frames.filter((f) => f.state.phase === 'naive').map((f) => f.state.callCount as number));
+      expect(naiveMax).toBe(naive.nodes.length);
+    });
+  }
+});

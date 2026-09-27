@@ -41,7 +41,7 @@ interface ComplexityState {
   message: string;
 }
 
-function buildSteps(maxN: number): VizStep<ComplexityState>[] {
+export function buildSteps(maxN: number): VizStep<ComplexityState>[] {
   const steps: VizStep<ComplexityState>[] = [];
 
   steps.push({

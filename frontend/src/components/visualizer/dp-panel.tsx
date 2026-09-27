@@ -31,7 +31,7 @@ interface DPState {
   message: string;
 }
 
-function buildSteps(
+export function buildSteps(
   items: { weight: number; value: number }[],
   capacity: number,
 ): VizStep<DPState>[] {
