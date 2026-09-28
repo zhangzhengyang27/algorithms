@@ -56,3 +56,15 @@ Thumbs.db
 
 # 数据库备份导出（含真实数据，勿入库）
 backups/
+
+# 包管理器口径：两端都用 pnpm，npm 的锁文件是误用产物（README「安装依赖」已写明）
+backend/package-lock.json
+
+# 一次性题目导入的生成态（可由 backend/scripts 下的脚本重建，非源码）
+backend/prisma/cr_work/
+backend/scripts/import-queue.json
+backend/scripts/needs-translation.json
+
+# Prisma 引擎二进制（binaries.prisma.sh 已不提供 6.19.3 的 commit，从旧镜像提取；
+# 仅供 docker build 上下文使用，勿入库）
+backend/docker-engines/

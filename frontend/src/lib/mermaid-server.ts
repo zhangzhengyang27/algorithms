@@ -46,7 +46,7 @@ async function getMermaid() {
   mermaidModule.initialize({
     startOnLoad: false,
     theme: 'dark',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     fontFamily: 'inherit',
   });
   return mermaidModule;

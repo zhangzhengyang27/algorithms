@@ -27,7 +27,7 @@
 - PostgreSQL（版本取决于你的实例，见 `PROJECT_MAP.md` §2 的口径说明）
 - Passport / JWT · Swagger · @nestjs/throttler
 
-> 生产镜像钉的是 `node:22-slim`；`package.json` 目前没有 `engines` 字段来约束本地 Node 版本。
+> 生产镜像与本地开发都要求 Node 22+：Dockerfile 钉 `node:22-slim`，两端 `package.json` 有 `"engines": { "node": ">=22" }`（未开 `engine-strict`，故本地 v24 也放行）。
 
 ## 快速开始
 
@@ -45,7 +45,7 @@ cd backend && pnpm install --frozen-lockfile
 
 ### 配置数据库
 
-1. 确保 PostgreSQL 已运行（README 旧版写 17，而 `docker-compose.yml` 注释指向 NAS 上的 PG 16；实际以你的实例为准）
+1. 确保 PostgreSQL 已运行（本地实测 Homebrew `postgresql@15`；`docker-compose.yml` 注释指向 NAS 上的 PG 16；实际以你的实例为准）
 2. 创建数据库：
 ```bash
 createdb algo_platform
@@ -116,15 +116,21 @@ algorithms/
 
 ## 演示账号
 
+仅由 `pnpm prisma:seed` 在**空库**上创建；容器启动流程已不再自动跑 seed（见下）。
+
 ```
-邮箱: demo@example.com
-密码: demo123
+邮箱: demo@example.com   密码: demo123    # role=USER
+邮箱: admin@example.com  密码: admin123   # role=ADMIN，仅用于本地开发
 ```
+
+> ⚠️ 生产库不要用默认口令：`NODE_ENV=production` 且未设 `SEED_ADMIN_PASSWORD` 时 seed 会直接报错退出。
+> 手动播种：`docker compose exec -e SEED_ADMIN_PASSWORD='<强口令>' backend pnpm prisma:seed`
 
 ## API 文档
 
 后端启动后访问：http://localhost:40001/api/docs
 
+> Swagger 会枚举全部路由，因此**只在非 production 挂载**（`NODE_ENV=production` 时该路径 404）。
 > 前端通过 Next.js 重写代理把 `/api/v1/*` 转发到后端 `:40001`，浏览器只需访问前端 `:4000`，无需单独配置跨域。
 
 ## 发布部署

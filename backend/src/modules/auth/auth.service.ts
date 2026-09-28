@@ -31,7 +31,7 @@ export class AuthService {
       throw err;
     }
 
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, user.tokenVersion);
 
     return {
       user: this.sanitizeUser(user),
@@ -55,7 +55,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, user.tokenVersion);
 
     return {
       user: this.sanitizeUser(user),
@@ -70,7 +70,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, user.tokenVersion);
     return {
       user: this.sanitizeUser(user),
       token,
@@ -89,8 +89,20 @@ export class AuthService {
     return this.sanitizeUser(user);
   }
 
-  private generateToken(userId: string) {
-    return this.jwtService.sign({ sub: userId });
+  private generateToken(userId: string, tokenVersion: number) {
+    return this.jwtService.sign({ sub: userId, tv: tokenVersion });
+  }
+
+  /**
+   * 递增 tokenVersion，使此前签发的所有 JWT 立即失效（策略层逐个比对 tv）。
+   * 登出与后续任何「改密/封号」动作都应走这里，否则令牌要等到自然过期才作废。
+   */
+  async revokeTokens(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    return { success: true };
   }
 
   /**
@@ -112,7 +124,7 @@ export class AuthService {
   }
 
   private sanitizeUser(user: any) {
-    const { passwordHash, ...result } = user;
+    const { passwordHash, tokenVersion, ...result } = user;
     return result;
   }
 }

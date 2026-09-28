@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -32,9 +33,9 @@ export class CommentsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  create(@CurrentUser() user: any, @Body() data: { problemId: string; content: string }) {
-    if (!data.problemId || !data.content?.trim()) throw new BadRequestException('problemId and content are required');
-    if (data.content.length > 5000) throw new BadRequestException('content is too long (max 5000 chars)');
+  create(@CurrentUser() user: any, @Body() data: CreateCommentDto) {
+    // 形状由全局 ValidationPipe 兜住（DTO），这里只管「算不算一条有效发言」
+    if (!data.content.trim()) throw new BadRequestException('content is required');
     return this.commentsService.create(user.id, data.problemId, data.content.trim());
   }
 

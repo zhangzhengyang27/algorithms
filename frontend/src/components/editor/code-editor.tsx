@@ -78,22 +78,9 @@ export function CodeEditor({
       return;
     }
 
-    try {
-      const logs: string[] = [];
-      const originalLog = console.log;
-      console.log = (...args: unknown[]) =>
-        logs.push(args.map((a) => renderValue(a)).join(' '));
-
-      const result = eval(code);
-      console.log = originalLog;
-
-      const logOutput = logs.join('\n');
-      const resultOutput = result !== undefined ? `\n返回: ${JSON.stringify(result)}` : '';
-      setOutput(logOutput + resultOutput);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message);
-    }
+    // 没有宿主执行器就不在主线程跑用户代码：这里的 code 可能来自数据库的
+    // problem.defaultCode，用 eval 执行等于给入库内容开了带 DOM 和 cookie 的同源通道。
+    setError('该页面未接入代码执行器');
   };
 
   const collectTrace = () => {

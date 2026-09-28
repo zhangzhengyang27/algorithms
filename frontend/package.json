@@ -2,6 +2,7 @@
   "name": "algo-visualizer-frontend",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=22"
   },

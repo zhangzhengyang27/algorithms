@@ -14,6 +14,15 @@ async function main() {
     return;
   }
 
+  // 新建库会在此创建 role=ADMIN 的账号，默认口令是公开的 README 值，
+  // 所以生产环境必须显式提供 SEED_ADMIN_PASSWORD，否则宁可失败也不留下后门。
+  if (process.env.NODE_ENV === 'production' && !process.env.SEED_ADMIN_PASSWORD) {
+    throw new Error(
+      'Refusing to seed in production without SEED_ADMIN_PASSWORD: ' +
+        'set a strong value in the environment, or seed a non-production NODE_ENV and rotate the password afterwards.',
+    );
+  }
+
   // Create demo user（密码可通过 SEED_DEMO_PASSWORD 环境变量覆盖）
   const demoPassword = process.env.SEED_DEMO_PASSWORD ?? 'demo123';
   const passwordHash = await bcrypt.hash(demoPassword, 12);

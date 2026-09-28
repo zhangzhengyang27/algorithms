@@ -45,7 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string }) {
+  async validate(payload: { sub: string; tv?: number }) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
@@ -54,7 +54,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const { passwordHash, ...result } = user;
+    // 吊销判据：令牌里的 tv 必须等于库里的当前版本。
+    // 缺 tv 的旧令牌（本列上线前签发的）一律视为无效——等于「全站重新登录」一次。
+    if (payload.tv !== user.tokenVersion) {
+      throw new UnauthorizedException();
+    }
+
+    const { passwordHash, tokenVersion, ...result } = user;
     return result;
   }
 }

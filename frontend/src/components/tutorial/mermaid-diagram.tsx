@@ -39,7 +39,9 @@ function ensureInitialized(theme: Theme) {
   mermaid.initialize({
     startOnLoad: false,
     theme: theme === 'light' ? 'default' : 'dark',
-    securityLevel: 'loose',
+    // loose 会放行标签里的原始 HTML；教程源虽在仓库内，但题解/评论内容日后可能入库渲染，
+    // strict 把这一路径变成纯文本。全 126 个含 mermaid 的教程都不依赖 HTML 标签或 click 回调。
+    securityLevel: 'strict',
     fontFamily: 'inherit',
     themeVariables: THEME_VARIABLES[theme],
   });

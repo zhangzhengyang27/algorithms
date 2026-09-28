@@ -11,7 +11,7 @@ export class CommentsService {
     const [items, total] = await Promise.all([
       this.prisma.comment.findMany({
         where,
-        include: { user: { select: { id: true, name: true, email: true } } },
+        include: { user: { select: { id: true, name: true } } },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -22,7 +22,8 @@ export class CommentsService {
     return {
       items: items.map((c) => ({
         ...c,
-        user: { id: c.user.id, name: c.user.name || c.user.email.split('@')[0] },
+        // 不回退到 email 的 @ 前缀——那等于把用户名公开在题解页上
+        user: { id: c.user.id, name: c.user.name || '学习者' },
       })),
       total,
       page,
@@ -38,12 +39,12 @@ export class CommentsService {
 
     const comment = await this.prisma.comment.create({
       data: { userId, problemId, content },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true } } },
     });
 
     return {
       ...comment,
-      user: { id: comment.user.id, name: comment.user.name || comment.user.email.split('@')[0] },
+      user: { id: comment.user.id, name: comment.user.name || '学习者' },
     };
   }
 
